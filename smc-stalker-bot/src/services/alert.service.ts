@@ -220,6 +220,7 @@ export function createAlertService(sql: Sql) {
         roleId: config.role_id,
         configId: config.id,
         nationName: config.nation_name ?? enemyNations.join(', '),
+        alertType: 'enemy',
         changes,
       });
     }

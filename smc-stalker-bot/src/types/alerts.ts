@@ -40,6 +40,7 @@ export interface EnemyAlertPayload {
   roleId: string | null;
   configId: string;
   nationName: string;
+  alertType: 'enemy';
   changes: EnemyChange[];
 }
 

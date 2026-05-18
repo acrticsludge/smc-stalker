@@ -20,6 +20,9 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
+      // Non-null assertions (!) are permitted when the developer has more
+      // context than the compiler — e.g. INSERT … RETURNING always returns.
+      '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/explicit-function-return-type': [
         'warn',
         {
