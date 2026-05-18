@@ -37,12 +37,10 @@ export function createRootLogger(env: Env): pino.Logger {
  * at the top level before the boot sequence initializes the logger.
  */
 export function getLogger(): pino.Logger {
-  if (!rootLogger) {
-    rootLogger = pino({
-      level: 'info',
-      name: 'smc-stalker-bot',
-    });
-  }
+  rootLogger ??= pino({
+    level: 'info',
+    name: 'smc-stalker-bot',
+  });
   return rootLogger;
 }
 

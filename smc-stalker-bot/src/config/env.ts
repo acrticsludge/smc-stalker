@@ -1,4 +1,8 @@
+import { config } from 'dotenv';
 import { z } from 'zod';
+
+// Load .env.local from one level above (the monorepo root)
+config({ path: '../.env.local' });
 
 const envSchema = z.object({
   DISCORD_TOKEN: z.string().min(1, 'DISCORD_TOKEN is required'),
