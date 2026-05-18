@@ -60,14 +60,25 @@ export function registerAlertsViewCommand(sql: Sql): void {
         const alertLines = configs.map((c) => {
           const status = c.enabled ? '✅' : '❌';
           const type = c.type.toUpperCase();
-          const nation = c.nation_name ? ` (${c.nation_name})` : '';
           const channel = `<#${c.channel_id}>`;
-          const role = c.role_id ? ` — pings <@&${c.role_id}>` : '';
           const time =
             c.schedule_times.length > 0
-              ? ` at **${c.schedule_times.join(', ')}**`
-              : ' (immediate)';
-          return `• ${status} **${type}**${nation} → ${channel}${role}${time}`;
+              ? ` at **${c.schedule_times.join(', ')} GMT**`
+              : ' immediate';
+          const n = c.threshold_days ? ` | N=${c.threshold_days}d` : '';
+
+          // Per-nation pings
+          const pingEntries = c.nation_pings
+            ? Object.entries(c.nation_pings as Record<string, string | null>)
+                .filter(([, rid]) => rid !== null)
+                .map(([nat, rid]) => `${nat}→<@&${rid}>`)
+            : [];
+          const pings =
+            pingEntries.length > 0
+              ? ` | pings: ${pingEntries.join(', ')}`
+              : '';
+
+          return `• ${status} **${type}** → ${channel}${time}${n}${pings}`;
         });
         sections.push(`**🔔 Alert Configs:**\n${alertLines.join('\n')}`);
       }
