@@ -26,14 +26,20 @@ export function createTownSnapshotRepository(sql: Sql) {
       townId: string;
       mayor: string;
       residents: number;
+      residentNames: string[];
+      status: string | null;
       nationId: string | null;
       bank: number;
       upkeep: number;
     }): Promise<TownSnapshotRow> {
       const rows = await sql<TownSnapshotRow[]>`
-        INSERT INTO town_snapshots (town_id, mayor, residents, nation_id, bank, upkeep)
-        VALUES (
+        INSERT INTO town_snapshots (
+          town_id, mayor, residents, resident_names, status,
+          nation_id, bank, upkeep
+        ) VALUES (
           ${snapshot.townId}, ${snapshot.mayor}, ${snapshot.residents},
+          ${sql.array(snapshot.residentNames as [string, ...string[]])},
+          ${snapshot.status},
           ${snapshot.nationId}, ${snapshot.bank}, ${snapshot.upkeep}
         )
         RETURNING *

@@ -1,6 +1,6 @@
 /**
- * /upkeep-nation — View a nation's upkeep overview and optionally
- * list its at-risk towns within N days.
+ * /upkeep-nation — View a nation's upkeep overview with total residents,
+ * total upkeep, and optionally list at-risk towns within N days.
  */
 
 import {
@@ -55,19 +55,22 @@ export function registerUpkeepNationCommand(sql: Sql): void {
       const totalBank = towns.reduce((sum, t) => sum + t.bank, 0);
       const totalUpkeep = towns.reduce((sum, t) => sum + t.upkeep, 0);
       const totalResidents = towns.reduce((sum, t) => sum + t.residents, 0);
-      const atRiskCount = towns.filter((t) => t.upkeep > 0 && t.bank < t.upkeep * 7).length;
+      const atRiskCount = towns.filter(
+        (t) => t.upkeep > 0 && t.bank < t.upkeep * 7,
+      ).length;
 
       const lines: string[] = [
         `**Towns:** ${towns.length}`,
-        `**Total Residents:** ${totalResidents}`,
-        `**Total Bank:** $${totalBank.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+        `**Total Residents:** ${totalResidents.toLocaleString()}`,
         `**Total Upkeep:** $${totalUpkeep.toLocaleString(undefined, { minimumFractionDigits: 2 })}/day`,
+        `**Total Bank:** $${totalBank.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
         `**Average Bank/Town:** $${(totalBank / towns.length).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+        `**Average Upkeep/Town:** $${(totalUpkeep / towns.length).toLocaleString(undefined, { minimumFractionDigits: 2 })}/day`,
         `**Towns at Risk (< 7 days):** ${atRiskCount}`,
         `**Last Seen:** <t:${Math.floor(new Date(nation.last_seen_at).getTime() / 1000)}:R>`,
       ];
 
-      // If a threshold was given, list the at-risk towns inline
+      // List at-risk towns if a threshold was provided
       if (thresholdDays) {
         const atRiskTowns = towns
           .filter((t) => t.upkeep > 0 && t.bank < t.upkeep * thresholdDays)

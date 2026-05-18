@@ -2,8 +2,7 @@
  * Poll service — orchestrates fetching dynmap data and persisting it.
  *
  * Uses sequential non-transactional writes. If one town fails, the others
- * still get saved. This avoids TransactionSql/Sql type incompatibility
- * and allows partial success tolerance.
+ * still get saved. Partial success tolerance.
  */
 
 import type { Sql } from 'postgres';
@@ -14,6 +13,8 @@ import { createTownRepository } from '../repositories/town.repository.js';
 import { createTownSnapshotRepository } from '../repositories/town-snapshot.repository.js';
 import { createTerritoryShapeRepository } from '../repositories/territory-shape.repository.js';
 import { createPollRunRepository } from '../repositories/poll-run.repository.js';
+import { createTownResidentSeriesRepository } from '../repositories/town-resident-series.repository.js';
+import { createNationResidentSeriesRepository } from '../repositories/nation-resident-series.repository.js';
 import type { DynmapPollResult } from '../types/dynmap.js';
 
 const logger = createLogger('poll-service');
@@ -34,14 +35,25 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
   const snapshotRepo = createTownSnapshotRepository(sql);
   const shapeRepo = createTerritoryShapeRepository(sql);
   const pollRunRepo = createPollRunRepository(sql);
+  const townSeriesRepo = createTownResidentSeriesRepository(sql);
+  const nationSeriesRepo = createNationResidentSeriesRepository(sql);
+
+  // Track processed data for daily series upsert
+  interface ProcessedTown {
+    townId: string;
+    nationId: string | null;
+    residents: number;
+  }
+  const processedTowns: ProcessedTown[] = [];
 
   /**
    * Execute a full poll cycle:
    *  1. Fetch dynmap data
-   *  2. Upsert nations and towns (sequentially)
-   *  3. Create snapshots
+   *  2. Upsert nations and towns
+   *  3. Create snapshots (with resident names + status)
    *  4. Upsert territory shapes
-   *  5. Record poll run
+   *  5. Upsert daily resident series
+   *  6. Record poll run
    */
   async function executePoll(): Promise<DynmapPollResult> {
     const pollRun = await pollRunRepo.create();
@@ -63,9 +75,9 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
 
       let townsUpdated = 0;
       const errors: string[] = [];
+      processedTowns.length = 0;
 
-      // Process each town sequentially (intentional — keeps operations simple
-      // and avoids TransactionSql/Sql type issues)
+      // Process each town sequentially
       for (const town of result.towns) {
         try {
           // Upsert nation first
@@ -86,14 +98,22 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
             upkeep: town.upkeep,
           });
 
-          // Create historical snapshot
+          // Create historical snapshot with new fields
           await snapshotRepo.create({
             townId: savedTown.id,
             mayor: town.mayor,
             residents: town.residents,
+            residentNames: town.residentNames,
+            status: town.status,
             nationId,
             bank: town.bank,
             upkeep: town.upkeep,
+          });
+
+          processedTowns.push({
+            townId: savedTown.id,
+            nationId,
+            residents: town.residents,
           });
 
           townsUpdated++;
@@ -104,7 +124,7 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
         }
       }
 
-      // Upsert territory shapes (separate loop to avoid blocking town processing)
+      // Upsert territory shapes
       for (const shape of result.shapes) {
         try {
           const townRow = await townRepo.findByName(shape.townName);
@@ -125,6 +145,9 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
           );
         }
       }
+
+      // Upsert daily resident series
+      await upsertDailySeries();
 
       const durationMs = Date.now() - startTime;
 
@@ -168,6 +191,46 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
         success: false,
         error: errorMessage,
       };
+    }
+  }
+
+  /**
+   * Upsert one row per town and one row per nation for today's date.
+   * Used for resident trend analytics.
+   */
+  async function upsertDailySeries(): Promise<void> {
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+    // Track nation resident totals
+    const nationTotals = new Map<string, number>();
+
+    for (const pt of processedTowns) {
+      try {
+        await townSeriesRepo.upsert(pt.townId, today, pt.residents);
+      } catch (error) {
+        logger.warn(
+          { townId: pt.townId, error: String(error) },
+          'Town resident series upsert failed',
+        );
+      }
+
+      // Accumulate nation totals
+      if (pt.nationId) {
+        const current = nationTotals.get(pt.nationId) ?? 0;
+        nationTotals.set(pt.nationId, current + pt.residents);
+      }
+    }
+
+    // Upsert nation series
+    for (const [nationId, totalResidents] of nationTotals) {
+      try {
+        await nationSeriesRepo.upsert(nationId, today, totalResidents);
+      } catch (error) {
+        logger.warn(
+          { nationId, error: String(error) },
+          'Nation resident series upsert failed',
+        );
+      }
     }
   }
 

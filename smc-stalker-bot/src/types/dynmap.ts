@@ -66,7 +66,9 @@ export interface ParsedTownData {
   name: string;
   mayor: string;
   residents: number;
+  residentNames: string[];
   nation: string | null;
+  status: string | null;
   founded: string | null; // YYYY-MM-DD or null if unparseable
   bank: number;
   upkeep: number;

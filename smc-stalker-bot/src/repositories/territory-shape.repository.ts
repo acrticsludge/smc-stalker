@@ -33,7 +33,10 @@ export function createTerritoryShapeRepository(sql: Sql) {
         INSERT INTO territory_shapes (town_id, region_index, marker_key, shape, holes, shape_y, snapshotted_at)
         VALUES (
           ${shape.townId}, ${shape.regionIndex}, ${shape.markerKey},
-          ${sql.json(shape.shape as unknown as JSONValue)}, ${sql.json(shape.holes as unknown as JSONValue)},
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+          ${sql.json(shape.shape as unknown as JSONValue)},
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+          ${sql.json(shape.holes as unknown as JSONValue)},
           ${shape.shapeY}, NOW()
         )
         ON CONFLICT (town_id, region_index) DO UPDATE SET

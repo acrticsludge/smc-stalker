@@ -1,6 +1,6 @@
 /**
  * Database row types.
- * Mirrors the schema defined in src/db/migrations/001_initial_schema.sql
+ * Mirrors the schema defined in src/db/migrations/
  */
 
 // ── Guild Management ───────────────────────────────────────
@@ -84,6 +84,8 @@ export interface TownSnapshotRow {
   town_id: string;
   mayor: string;
   residents: number;
+  resident_names: string[];
+  status: string | null;
   nation_id: string | null;
   bank: number;
   upkeep: number;
@@ -118,4 +120,22 @@ export interface PollRunRow {
   towns_found: number;
   towns_updated: number;
   duration_ms: number;
+}
+
+// ── Resident Series (Analytics) ────────────────────────────
+
+export interface TownResidentSeriesRow {
+  id: string;
+  town_id: string;
+  snapshot_date: string;
+  residents: number;
+  created_at: string;
+}
+
+export interface NationResidentSeriesRow {
+  id: string;
+  nation_id: string;
+  snapshot_date: string;
+  residents: number;
+  created_at: string;
 }

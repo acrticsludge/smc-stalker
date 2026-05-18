@@ -5,7 +5,9 @@
  *   <b>TownName</b><br>
  *   Mayor: MayorName<br>
  *   Residents: N<br>
+ *   Resident Names: name1, name2, ...<br>
  *   Nation: NationName<br>
+ *   Status: peaceful|unpeaceful<br>
  *   Founded: YYYY-MM-DD<br>
  *   Bank: XXXX.XX<br>
  *   Upkeep: XXX.XX/day
@@ -17,13 +19,15 @@ import { createLogger } from './logger.js';
 
 const logger = createLogger('dynmap-parser');
 
-const FIELD_REGEX = /^(Mayor|Residents|Nation|Founded|Bank|Upkeep):\s*(.+)$/m;
+const FIELD_REGEX = /^(Mayor|Residents|Resident Names|Nation|Status|Founded|Bank|Upkeep):\s*(.+)$/m;
 
 /** Extracted field values from a detail HTML string */
 interface ExtractedFields {
   mayor: string;
   residents: number;
+  residentNames: string[];
   nation: string | null;
+  status: string | null;
   founded: string | null;
   bank: number;
   upkeep: number;
@@ -52,7 +56,9 @@ export function parseTownDataFromDetail(
     name,
     mayor: fields.mayor,
     residents: fields.residents,
+    residentNames: fields.residentNames,
     nation: fields.nation,
+    status: fields.status,
     founded: fields.founded,
     bank: fields.bank,
     upkeep: fields.upkeep,
@@ -76,7 +82,9 @@ function extractFields(detail: string): ExtractedFields {
   const result: ExtractedFields = {
     mayor: '',
     residents: 0,
+    residentNames: [],
     nation: null,
+    status: null,
     founded: null,
     bank: 0,
     upkeep: 0,
@@ -98,8 +106,19 @@ function extractFields(detail: string): ExtractedFields {
       case 'Residents':
         result.residents = Number.parseInt(value, 10) || 0;
         break;
+      case 'Resident Names':
+        result.residentNames = value
+          .split(',')
+          .map((n) => n.trim())
+          .filter((n) => n.length > 0);
+        break;
       case 'Nation':
         result.nation = value === 'None' ? null : value;
+        break;
+      case 'Status':
+        result.status = ['peaceful', 'unpeaceful'].includes(value)
+          ? value
+          : null;
         break;
       case 'Founded':
         result.founded = value;
@@ -108,7 +127,9 @@ function extractFields(detail: string): ExtractedFields {
         result.bank = Number.parseFloat(value.replace(/[$,]/g, '')) || 0;
         break;
       case 'Upkeep':
-        result.upkeep = Number.parseFloat(value.replace(/[$,]/g, '').replace(/\/day$/, '')) || 0;
+        result.upkeep = Number.parseFloat(
+          value.replace(/[$,]/g, '').replace(/\/day$/, ''),
+        ) || 0;
         break;
     }
   }
@@ -122,7 +143,9 @@ const parsedTownSchema = z.object({
   name: z.string().min(1),
   mayor: z.string(),
   residents: z.number().int().min(0),
+  residentNames: z.array(z.string()),
   nation: z.string().nullable(),
+  status: z.string().nullable(),
   founded: z
     .string()
     .nullable()
