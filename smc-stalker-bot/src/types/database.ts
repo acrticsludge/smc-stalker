@@ -123,6 +123,18 @@ export interface PollRunRow {
   duration_ms: number;
 }
 
+// ── Access Requests ─────────────────────────────────────────
+
+export interface AccessRequestRow {
+  id: string;
+  guild_id: string;
+  user_id: string;
+  user_name: string;
+  status: 'pending' | 'approved' | 'denied';
+  created_at: string;
+  reviewed_at: string | null;
+}
+
 // ── Resident Series (Analytics) ────────────────────────────
 
 export interface TownResidentSeriesRow {

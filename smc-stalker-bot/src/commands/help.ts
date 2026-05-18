@@ -45,6 +45,13 @@ const HELP_CATEGORIES = [
     ],
   },
   {
+    name: '🔑 Access',
+    commands: [
+      { name: '/access', desc: 'Request access to use bot commands in this server.' },
+      { name: '/admin-pending', desc: '(superadmin) Review and approve/deny pending access requests.' },
+    ],
+  },
+  {
     name: 'ℹ️ Other',
     commands: [
       { name: '/help', desc: 'Show this command reference.' },

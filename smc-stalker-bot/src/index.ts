@@ -17,6 +17,8 @@ import { BOT_NAME, BOT_VERSION } from './config/constants.js';
 import { createDbClient, closeDb } from './db/client.js';
 import { startBot, stopBot } from './bot.js';
 import { registerAllCommands } from './commands/index.js';
+import { setDiscordClient } from './commands/access.js';
+import { setInteractionClient } from './events/interaction-create.js';
 import { startPoller } from './workers/poller.js';
 import { recordBotStart } from './services/health.service.js';
 
@@ -52,6 +54,10 @@ function main(): void {
   startBot({ token: env.DISCORD_TOKEN, clientId: env.DISCORD_CLIENT_ID }, sql)
     .then((client) => {
       logger.info('Discord client connected');
+
+      // Wire client reference for button interactions and DM notifications
+      setDiscordClient(client);
+      setInteractionClient(client);
 
       // 7. Start poller
       const poller = startPoller(
