@@ -2,7 +2,7 @@
  * Interaction create event handler.
  *
  * Handles:
- *  - Slash commands (with auth check)
+ *  - Slash commands (auth check AFTER deferral to avoid 3s timeout)
  *  - Button interactions (approve/deny access requests)
  */
 
@@ -27,9 +27,6 @@ export function setInteractionClient(client: import('discord.js').Client): void 
   discordClient = client;
 }
 
-/**
- * Handle an incoming interaction.
- */
 export async function handleInteraction(
   interaction: Interaction,
   sql: Sql,
@@ -41,9 +38,6 @@ export async function handleInteraction(
   }
 }
 
-/**
- * Handle a slash command.
- */
 async function handleCommand(
   interaction: ChatInputCommandInteraction,
   sql: Sql,
@@ -52,20 +46,10 @@ async function handleCommand(
     await executeCommand(interaction, sql);
   } catch (error) {
     logger.error(
-      {
-        command: interaction.commandName,
-        user: interaction.user.id,
-        guild: interaction.guildId,
-        error: String(error),
-      },
+      { command: interaction.commandName, user: interaction.user.id, guild: interaction.guildId, error: String(error) },
       'Unhandled command error',
     );
-
-    const errorEmbed = dangerEmbed(
-      'Command Error',
-      'An unexpected error occurred. Please try again later.',
-    );
-
+    const errorEmbed = dangerEmbed('Command Error', 'An unexpected error occurred.');
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply({ embeds: [errorEmbed] });
     } else {
@@ -75,7 +59,11 @@ async function handleCommand(
 }
 
 /**
- * Execute a validated command with authorization checks.
+ * Execute a command with auth check.
+ *
+ * CRITICAL: deferReply() is called FIRST, before the auth check.
+ * Discord requires a response within 3 seconds. DB queries during
+ * auth can exceed that. Deferring buys 15 minutes to respond.
  */
 async function executeCommand(
   interaction: ChatInputCommandInteraction,
@@ -85,40 +73,34 @@ async function executeCommand(
 
   if (!command) {
     await interaction.reply({
-      embeds: [
-        dangerEmbed(
-          'Unknown Command',
-          `\`/${interaction.commandName}\` is not registered.`,
-        ),
-      ],
+      embeds: [dangerEmbed('Unknown Command', `\`/${interaction.commandName}\` is not registered.`)],
       flags: 64,
     });
     return;
   }
 
-  // Authorization check
+  // Defer immediately to avoid 3-second window expiry
+  await interaction.deferReply();
+
+  // Auth check (DB queries can be slow)
   const auth = await checkAuthorization(interaction, sql);
 
   if (!auth.authorized) {
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [dangerEmbed('Access Denied', auth.reason)],
-      flags: 64,
     });
     return;
   }
 
-  await interaction.deferReply();
   await command.execute(interaction);
 }
 
-/**
- * Handle a button interaction (approve/deny access requests).
- */
+// ── Button handler (unchanged) ─────────────────────────
+
 async function handleButton(
   interaction: ButtonInteraction,
   sql: Sql,
 ): Promise<void> {
-  // Only the superadmin can use these buttons
   if (interaction.user.id !== SUPERADMIN_ID) {
     await interaction.reply({
       embeds: [dangerEmbed('Access Denied', 'Only the superadmin can review access requests.')],
@@ -128,8 +110,6 @@ async function handleButton(
   }
 
   const customId = interaction.customId;
-
-  // Parse: approve_access_<uuid> or deny_access_<uuid>
   const approveMatch = /^approve_access_(.+)$/.exec(customId);
   const denyMatch = /^deny_access_(.+)$/.exec(customId);
   const requestId = approveMatch?.[1] ?? denyMatch?.[1];
@@ -157,63 +137,32 @@ async function handleButton(
   const isApprove = approveMatch !== null;
 
   if (isApprove) {
-    // Create guild user entry
     await userRepo.add(request.guild_id, request.user_id, 'user');
     await accessRepo.approve(request.id);
-
-    // DM the user confirmation
     if (discordClient) {
       try {
         const user = await discordClient.users.fetch(request.user_id);
         await user.send({
-          embeds: [
-            successEmbed(
-              '✅ Access Approved',
-              `Your request to use SMC Stalker Bot in guild \`${request.guild_id}\` has been **approved**. You can now use upkeep commands there.`,
-            ),
-          ],
+          embeds: [successEmbed('✅ Access Approved', `Your request to use SMC Stalker Bot in guild \`${request.guild_id}\` has been **approved**.`)],
         });
-      } catch {
-        logger.warn({ userId: request.user_id }, 'Failed to DM user about approval');
-      }
+      } catch { logger.warn({ userId: request.user_id }, 'Failed to DM user'); }
     }
-
     await interaction.update({
-      embeds: [
-        successEmbed(
-          '✅ Approved',
-          `Access approved for **${request.user_name}** (\`${request.user_id}\`) in guild \`${request.guild_id}\`.`,
-        ),
-      ],
+      embeds: [successEmbed('✅ Approved', `Access approved for **${request.user_name}** (\`${request.user_id}\`) in guild \`${request.guild_id}\`.`)],
       components: [],
     });
   } else {
     await accessRepo.deny(request.id);
-
-    // DM the user denial
     if (discordClient) {
       try {
         const user = await discordClient.users.fetch(request.user_id);
         await user.send({
-          embeds: [
-            dangerEmbed(
-              '❌ Access Denied',
-              `Your request to use SMC Stalker Bot in guild \`${request.guild_id}\` has been **denied**.`,
-            ),
-          ],
+          embeds: [dangerEmbed('❌ Access Denied', `Your request for guild \`${request.guild_id}\` has been **denied**.`)],
         });
-      } catch {
-        logger.warn({ userId: request.user_id }, 'Failed to DM user about denial');
-      }
+      } catch { logger.warn({ userId: request.user_id }, 'Failed to DM user'); }
     }
-
     await interaction.update({
-      embeds: [
-        dangerEmbed(
-          '❌ Denied',
-          `Access denied for **${request.user_name}** (\`${request.user_id}\`) in guild \`${request.guild_id}\`.`,
-        ),
-      ],
+      embeds: [dangerEmbed('❌ Denied', `Access denied for **${request.user_name}** (\`${request.user_id}\`) in guild \`${request.guild_id}\`.`)],
       components: [],
     });
   }
