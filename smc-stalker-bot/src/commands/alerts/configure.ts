@@ -35,6 +35,12 @@ export function registerAlertConfigureCommand(sql: Sql): void {
                   .setDescription('Alert channel')
                   .setRequired(true),
               )
+              .addStringOption((opt) =>
+                opt
+                  .setName('time')
+                  .setDescription('Alert time in HH:MM (24h). Omit for immediate alerts.')
+                  .setRequired(false),
+              )
               .addIntegerOption((opt) =>
                 opt
                   .setName('threshold-days')
@@ -139,6 +145,23 @@ export function registerAlertConfigureCommand(sql: Sql): void {
         const thresholdDays =
           interaction.options.getInteger('threshold-days') ?? 7;
         const role = interaction.options.getRole('role');
+        const timeRaw = interaction.options.getString('time');
+
+        const scheduleTimes: string[] = [];
+        let scheduleNote = '';
+        if (timeRaw) {
+          // Validate HH:MM format
+          if (!/^\d{2}:\d{2}$/.test(timeRaw)) {
+            await interaction.editReply({
+              embeds: [
+                dangerEmbed('Invalid Time', 'Time must be in **HH:MM** format, e.g. `20:00` for 8 PM.'),
+              ],
+            });
+            return;
+          }
+          scheduleTimes.push(timeRaw);
+          scheduleNote = ` at **${timeRaw}**`;
+        }
 
         await alertRepo.create({
           guildId,
@@ -146,7 +169,7 @@ export function registerAlertConfigureCommand(sql: Sql): void {
           nationName: null,
           channelId: channel.id,
           roleId: role?.id ?? null,
-          scheduleTimes: [],
+          scheduleTimes,
           cooldownMin: 60,
           thresholdDays,
         });
@@ -155,7 +178,7 @@ export function registerAlertConfigureCommand(sql: Sql): void {
           embeds: [
             successEmbed(
               'Upkeep Alert Created',
-              `Alerts will be sent to <#${channel.id}>${role ? `, pinging <@&${role.id}>` : ''} when a town has less than **${thresholdDays} days** of upkeep remaining.`,
+              `Alerts will be sent to <#${channel.id}>${role ? `, pinging <@&${role.id}>` : ''}${scheduleNote} when a town has less than **${thresholdDays} days** of upkeep remaining.`,
             ),
           ],
         });
