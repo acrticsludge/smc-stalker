@@ -23,16 +23,25 @@ export function createNationRepository(sql: Sql) {
       `;
     },
 
-    async upsert(name: string): Promise<NationRow> {
+    async upsert(name: string, color?: number | null): Promise<NationRow> {
       const rows = await sql<NationRow[]>`
-        INSERT INTO nations (name, last_seen_at)
-        VALUES (${name}, NOW())
+        INSERT INTO nations (name, color, last_seen_at)
+        VALUES (${name}, ${color ?? null}, NOW())
         ON CONFLICT (name) DO UPDATE SET
+          color = COALESCE(EXCLUDED.color, nations.color),
           last_seen_at = NOW(),
           updated_at = NOW()
         RETURNING *
       `;
       return rows[0]!;
+    },
+
+    async updateColor(id: string, color: number | null): Promise<NationRow | null> {
+      const rows = await sql<NationRow[]>`
+        UPDATE nations SET color = ${color}, updated_at = NOW() WHERE id = ${id}
+        RETURNING *
+      `;
+      return rows[0] ?? null;
     },
 
     async markSeen(name: string): Promise<NationRow | null> {

@@ -41,6 +41,7 @@ interface ExtractedFields {
 export function parseTownDataFromDetail(
   detail: string,
   fallbackName: string,
+  fillColor: number | null = null,
 ): ParsedTownData | null {
   const nameMatch = /<b>(.+?)<\/b>/i.exec(detail);
   const name = nameMatch?.[1]?.trim() ?? fallbackName;
@@ -62,6 +63,7 @@ export function parseTownDataFromDetail(
     founded: fields.founded,
     bank: fields.bank,
     upkeep: fields.upkeep,
+    fillColor,
   });
 
   if (!result.success) {
@@ -155,4 +157,5 @@ const parsedTownSchema = z.object({
   // Bank can be negative (debt) — don't discard towns with negative balance
   bank: z.number(),
   upkeep: z.number().min(0),
+  fillColor: z.number().int().nullable(),
 });

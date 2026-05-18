@@ -61,6 +61,7 @@ export interface AlertConfigRow {
 export interface NationRow {
   id: string;
   name: string;
+  color: number | null;
   last_seen_at: string;
   created_at: string;
   updated_at: string;
@@ -72,6 +73,7 @@ export interface TownRow {
   mayor: string;
   residents: number;
   nation_id: string | null;
+  color: number | null;
   founded: string | null;
   bank: number;
   upkeep: number;

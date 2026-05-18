@@ -17,12 +17,21 @@ const vertexSchema = z.object({
   z: z.number(),
 });
 
+const colorSchema = z.object({
+  r: z.number(),
+  g: z.number(),
+  b: z.number(),
+  a: z.number(),
+});
+
 const markerSchema = z.object({
   shape: z.array(vertexSchema),
   holes: z.array(z.array(vertexSchema)).default([]),
   shapeY: z.number().default(64),
   label: z.string(),
   detail: z.string(),
+  fillColor: colorSchema.optional(),
+  lineColor: colorSchema.optional(),
 });
 
 const markerSetSchema = z.object({
@@ -111,8 +120,13 @@ export function createDynmapClient(config: DynmapClientConfig) {
         // Town name is the label
         const townName = marker.label;
 
-        // Parse HTML detail
-        const parsedTown = parseTownDataFromDetail(marker.detail, townName);
+        // Compute fill colour from marker's line/fill colour
+        const fillColor = marker.fillColor
+          ? ((marker.fillColor.r << 16) | (marker.fillColor.g << 8) | marker.fillColor.b) & 0xffffff
+          : null;
+
+        // Parse HTML detail with fill colour
+        const parsedTown = parseTownDataFromDetail(marker.detail, townName, fillColor);
         if (parsedTown) {
           towns.push(parsedTown);
         }

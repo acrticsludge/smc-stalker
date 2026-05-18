@@ -13,6 +13,7 @@ import { createTownRepository } from '../../repositories/town.repository.js';
 import { createNationRepository } from '../../repositories/nation.repository.js';
 import { infoEmbed } from '../../lib/embed-builder.js';
 import { formatDateLongGMT } from '../../lib/dates.js';
+import { escapeMD, formatCurrency } from '../../lib/format.js';
 import { sendPaginated } from '../../lib/pagination.js';
 
 const ITEMS_PER_PAGE = 15;
@@ -61,8 +62,8 @@ export function registerListCommands(sql: Sql): void {
                 ? (nationMap.get(t.nation_id) ?? 'Unknown')
                 : 'None';
               return (
-                `• **${t.name}** [${nationName}] — ` +
-                `$${t.upkeep.toFixed(2)}/day, bank: $${t.bank.toFixed(2)}, res: ${t.residents}`
+                `• **${escapeMD(t.name)}** [${escapeMD(nationName)}] — ` +
+                `${formatCurrency(t.upkeep)}/day, bank: ${formatCurrency(t.bank)}, res: ${t.residents}`
               );
             })
             .join('\n');
@@ -97,7 +98,7 @@ export function registerListCommands(sql: Sql): void {
           const description = chunk
             .map(
               (n) =>
-                `• **${n.name}** — Last seen: ${formatDateLongGMT(n.last_seen_at)}`,
+                `• **${escapeMD(n.name)}** — Last seen: ${formatDateLongGMT(n.last_seen_at)}`,
             )
             .join('\n');
 

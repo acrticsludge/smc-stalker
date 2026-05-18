@@ -52,13 +52,14 @@ export function createTownRepository(sql: Sql) {
       founded: string | null;
       bank: number;
       upkeep: number;
+      color?: number | null;
     }): Promise<TownRow> {
       const rows = await sql<TownRow[]>`
-        INSERT INTO towns (name, mayor, residents, nation_id, founded, bank, upkeep, last_seen_at)
+        INSERT INTO towns (name, mayor, residents, nation_id, founded, bank, upkeep, color, last_seen_at)
         VALUES (
           ${town.name}, ${town.mayor}, ${town.residents},
           ${town.nationId}, ${town.founded}, ${town.bank},
-          ${town.upkeep}, NOW()
+          ${town.upkeep}, ${town.color ?? null}, NOW()
         )
         ON CONFLICT (name) DO UPDATE SET
           mayor = EXCLUDED.mayor,
@@ -67,6 +68,7 @@ export function createTownRepository(sql: Sql) {
           founded = COALESCE(EXCLUDED.founded, towns.founded),
           bank = EXCLUDED.bank,
           upkeep = EXCLUDED.upkeep,
+          color = COALESCE(EXCLUDED.color, towns.color),
           last_seen_at = NOW(),
           updated_at = NOW()
         RETURNING *

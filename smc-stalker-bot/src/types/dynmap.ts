@@ -31,8 +31,8 @@ export interface DynmapMarker {
   shapeY: number;
   depthTest: boolean;
   lineWidth: number;
-  lineColor: DynmapColor;
-  fillColor: DynmapColor;
+  lineColor?: DynmapColor;
+  fillColor?: DynmapColor;
   detail: string; // HTML content
   newTab: boolean;
   minDistance: number;
@@ -72,6 +72,7 @@ export interface ParsedTownData {
   founded: string | null; // YYYY-MM-DD or null if unparseable
   bank: number;
   upkeep: number;
+  fillColor: number | null; // RGB integer from dynmap shape color
 }
 
 /** Result of a dynmap poll cycle */

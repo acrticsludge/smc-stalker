@@ -12,6 +12,7 @@ import { defineCommand } from '../register.js';
 import { createTownRepository } from '../../repositories/town.repository.js';
 import { createNationRepository } from '../../repositories/nation.repository.js';
 import { infoEmbed } from '../../lib/embed-builder.js';
+import { escapeMD, formatCurrency } from '../../lib/format.js';
 import { sendPaginated } from '../../lib/pagination.js';
 
 const ITEMS_PER_PAGE = 15;
@@ -92,8 +93,8 @@ export function registerAtRiskCommand(sql: Sql): void {
               daysDisplay = '**unknown**';
             }
             return (
-              `• **${t.name}** [${nationName}] — ` +
-              `$${t.upkeep.toFixed(2)}/day, bank: $${t.bank.toFixed(2)}, ` +
+              `• **${escapeMD(t.name)}** [${escapeMD(nationName)}] — ` +
+              `${formatCurrency(t.upkeep)}/day, bank: ${formatCurrency(t.bank)}, ` +
               daysDisplay
             );
           })

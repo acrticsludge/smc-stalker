@@ -38,13 +38,16 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
   const townSeriesRepo = createTownResidentSeriesRepository(sql);
   const nationSeriesRepo = createNationResidentSeriesRepository(sql);
 
-  // Track processed data for daily series upsert
+  // Track processed data for daily series upsert and color averaging
   interface ProcessedTown {
     townId: string;
     nationId: string | null;
     residents: number;
+    fillColor: number | null;
   }
   const processedTowns: ProcessedTown[] = [];
+  // Track fill colors per nation for averaging
+  const nationColors = new Map<string, number[]>();
 
   /**
    * Execute a full poll cycle:
@@ -83,11 +86,17 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
           // Upsert nation first
           let nationId: string | null = null;
           if (town.nation) {
-            const nation = await nationRepo.upsert(town.nation);
+            const nation = await nationRepo.upsert(town.nation, town.fillColor);
             nationId = nation.id;
+            // Track color for averaging
+            if (town.fillColor !== null) {
+              const existing = nationColors.get(nation.id) ?? [];
+              existing.push(town.fillColor);
+              nationColors.set(nation.id, existing);
+            }
           }
 
-          // Upsert town
+          // Upsert town with colour
           const savedTown = await townRepo.upsert({
             name: town.name,
             mayor: town.mayor,
@@ -96,6 +105,7 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
             founded: town.founded,
             bank: town.bank,
             upkeep: town.upkeep,
+            color: town.fillColor,
           });
 
           // Create historical snapshot with new fields
@@ -114,6 +124,7 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
             townId: savedTown.id,
             nationId,
             residents: town.residents,
+            fillColor: town.fillColor,
           });
 
           townsUpdated++;
@@ -143,6 +154,14 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
             { shape: shape.markerKey, error: String(error) },
             'Shape upsert failed',
           );
+        }
+      }
+
+      // Average nation colors from all towns' fill colors
+      for (const [nationId, colors] of nationColors) {
+        if (colors.length > 0) {
+          const avg = Math.round(colors.reduce((a, b) => a + b, 0) / colors.length);
+          await nationRepo.updateColor(nationId, avg);
         }
       }
 

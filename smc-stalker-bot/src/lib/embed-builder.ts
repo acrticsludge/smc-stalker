@@ -1,60 +1,51 @@
 /**
- * Discord embed builder helpers for consistent embed formatting.
+ * Discord embed builder helpers.
+ * All functions accept an optional `color` override.
+ * Default: 0x00aaff (blue).
  */
 
 import { EmbedBuilder, type ColorResolvable } from 'discord.js';
 
-const PRIMARY_COLOR: ColorResolvable = 0x00aaff;
+const DEFAULT_COLOR: ColorResolvable = 0x00aaff;
 const WARNING_COLOR: ColorResolvable = 0xffaa00;
 const DANGER_COLOR: ColorResolvable = 0xff4444;
 const SUCCESS_COLOR: ColorResolvable = 0x44ff44;
 
 const FOOTER_TEXT = 'SMC Stalker Bot';
 
-/**
- * Create a standard information embed.
- */
-export function infoEmbed(title: string, description?: string): EmbedBuilder {
+function go(
+  color: ColorResolvable,
+  title: string,
+  description?: string,
+): EmbedBuilder {
   return new EmbedBuilder()
-    .setColor(PRIMARY_COLOR)
+    .setColor(color)
     .setTitle(title)
     .setDescription(description ?? null)
     .setFooter({ text: FOOTER_TEXT })
     .setTimestamp();
 }
 
-/**
- * Create a warning embed.
- */
+/** Information embed — default blue or custom color */
+export function infoEmbed(
+  title: string,
+  description?: string,
+  color?: ColorResolvable,
+): EmbedBuilder {
+  return go(color ?? DEFAULT_COLOR, title, description);
+}
+
+/** Warning embed — orange */
 export function warningEmbed(title: string, description?: string): EmbedBuilder {
-  return new EmbedBuilder()
-    .setColor(WARNING_COLOR)
-    .setTitle(title)
-    .setDescription(description ?? null)
-    .setFooter({ text: FOOTER_TEXT })
-    .setTimestamp();
+  return go(WARNING_COLOR, title, description);
 }
 
-/**
- * Create a danger/error embed.
- */
+/** Danger/error embed — red */
 export function dangerEmbed(title: string, description?: string): EmbedBuilder {
-  return new EmbedBuilder()
-    .setColor(DANGER_COLOR)
-    .setTitle(title)
-    .setDescription(description ?? null)
-    .setFooter({ text: FOOTER_TEXT })
-    .setTimestamp();
+  return go(DANGER_COLOR, title, description);
 }
 
-/**
- * Create a success embed.
- */
+/** Success embed — green */
 export function successEmbed(title: string, description?: string): EmbedBuilder {
-  return new EmbedBuilder()
-    .setColor(SUCCESS_COLOR)
-    .setTitle(title)
-    .setDescription(description ?? null)
-    .setFooter({ text: FOOTER_TEXT })
-    .setTimestamp();
+  return go(SUCCESS_COLOR, title, description);
 }
