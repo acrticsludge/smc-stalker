@@ -15,11 +15,15 @@ import { registerUpkeepNationCommand } from './upkeep/nation.js';
 import { registerListCommands } from './upkeep/list.js';
 import { registerAlertConfigureCommand } from './alerts/configure.js';
 import { registerAlertStatusCommand } from './alerts/status.js';
+import { registerHelpCommand } from './help.js';
 
 /**
  * Register all bot commands with the command registry.
  */
 export function registerAllCommands(sql: Sql): void {
+  // Help
+  registerHelpCommand(sql);
+
   // Admin commands (superadmin only)
   registerWhitelistCommands(sql);
   registerAdminCommands(sql);
