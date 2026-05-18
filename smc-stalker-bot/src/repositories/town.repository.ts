@@ -89,8 +89,8 @@ export function createTownRepository(sql: Sql) {
     async findByBankThreshold(maxUpkeepDays: number): Promise<TownRow[]> {
       return sql<TownRow[]>`
         SELECT * FROM towns
-        WHERE bank > 0 AND upkeep > 0
-          AND bank < (upkeep * ${maxUpkeepDays})
+        WHERE upkeep > 0
+          AND (bank < 0 OR bank < (upkeep * ${maxUpkeepDays}))
         ORDER BY (bank / NULLIF(upkeep, 0)) ASC
       `;
     },

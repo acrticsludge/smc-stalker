@@ -152,6 +152,7 @@ const parsedTownSchema = z.object({
     .refine((val) => val === null || /^\d{4}-\d{2}-\d{2}$/.test(val), {
       message: 'Founded must be a date in YYYY-MM-DD format',
     }),
-  bank: z.number().min(0),
+  // Bank can be negative (debt) — don't discard towns with negative balance
+  bank: z.number(),
   upkeep: z.number().min(0),
 });

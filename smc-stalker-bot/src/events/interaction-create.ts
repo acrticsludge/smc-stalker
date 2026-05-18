@@ -1,8 +1,8 @@
 /**
  * Interaction create event handler.
  *
- * Receives all interactions and dispatches to the appropriate
- * command handler after authorization checks.
+ * Receives all interactions, authorizes, defers, and dispatches
+ * to the appropriate command handler.
  */
 
 import {
@@ -49,13 +49,14 @@ export async function handleInteraction(
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply({ embeds: [errorEmbed] });
     } else {
-      await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed], flags: 64 }); // MessageFlags.Ephemeral = 64
     }
   }
 }
 
 /**
  * Execute a validated command with authorization checks.
+ * Always defers first so commands can use editReply freely.
  */
 async function executeCommand(
   interaction: ChatInputCommandInteraction,
@@ -71,7 +72,7 @@ async function executeCommand(
           `\`/${interaction.commandName}\` is not registered.`,
         ),
       ],
-      ephemeral: true,
+      flags: 64,
     });
     return;
   }
@@ -82,11 +83,14 @@ async function executeCommand(
   if (!auth.authorized) {
     await interaction.reply({
       embeds: [dangerEmbed('Access Denied', auth.reason)],
-      ephemeral: true,
+      flags: 64,
     });
     return;
   }
 
-  // Execute the command handler (commands should deferReply if they need time)
+  // Defer so the command can safely use editReply
+  await interaction.deferReply();
+
+  // Execute the command handler
   await command.execute(interaction);
 }

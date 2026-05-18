@@ -29,14 +29,14 @@ export function createTerritoryShapeRepository(sql: Sql) {
       holes: ShapeVertex[][];
       shapeY: number;
     }): Promise<TerritoryShapeRow> {
+      const shapeJson = sql.json(shape.shape as unknown as JSONValue);
+      const holesJson = sql.json(shape.holes as unknown as JSONValue);
+
       const rows = await sql<TerritoryShapeRow[]>`
         INSERT INTO territory_shapes (town_id, region_index, marker_key, shape, holes, shape_y, snapshotted_at)
         VALUES (
           ${shape.townId}, ${shape.regionIndex}, ${shape.markerKey},
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-          ${sql.json(shape.shape as unknown as JSONValue)},
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-          ${sql.json(shape.holes as unknown as JSONValue)},
+          ${shapeJson}, ${holesJson},
           ${shape.shapeY}, NOW()
         )
         ON CONFLICT (town_id, region_index) DO UPDATE SET
