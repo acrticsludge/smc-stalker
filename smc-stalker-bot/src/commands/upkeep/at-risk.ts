@@ -12,7 +12,7 @@ import { defineCommand } from '../register.js';
 import { createTownRepository } from '../../repositories/town.repository.js';
 import { createNationRepository } from '../../repositories/nation.repository.js';
 import { infoEmbed } from '../../lib/embed-builder.js';
-import { escapeMD, formatCurrency } from '../../lib/format.js';
+import { escapeMD, formatCurrency, displayDays } from '../../lib/format.js';
 import { sendPaginated } from '../../lib/pagination.js';
 
 const ITEMS_PER_PAGE = 15;
@@ -52,7 +52,7 @@ export function registerAtRiskCommand(sql: Sql): void {
 
       // Filter towns at risk
       const atRisk = allTowns.filter(
-        (t) => t.upkeep > 0 && t.bank < t.upkeep * days,
+        (t) => t.upkeep > 0 && t.bank <= t.upkeep * days,
       );
 
       if (atRisk.length === 0) {
@@ -87,8 +87,9 @@ export function registerAtRiskCommand(sql: Sql): void {
             if (t.bank <= 0) {
               daysDisplay = '💀 **insolvent**';
             } else if (t.upkeep > 0) {
-              const daysLeft = Math.floor(t.bank / t.upkeep);
-              daysDisplay = `**${daysLeft} day${daysLeft === 1 ? '' : 's'}** left`;
+              const rawDays = Math.floor(t.bank / t.upkeep);
+              const daysLeft = displayDays(rawDays);
+              daysDisplay = `**${daysLeft === 0 ? 'Falling today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`}**`;
             } else {
               daysDisplay = '**unknown**';
             }

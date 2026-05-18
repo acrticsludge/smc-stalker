@@ -15,6 +15,20 @@ export function escapeMD(text: string): string {
 }
 
 /**
+ * Convert raw days-until-insolvent to a display value.
+ * - Negative → -1 (already insolvent)
+ * - 0 or 1 → 0 (falling today or within the next cycle)
+ * - 2+ → as-is
+ * - 999 → 999 (no upkeep, infinite)
+ */
+export function displayDays(raw: number): number {
+  if (raw <= 0) return raw;
+  if (raw <= 1) return 0;
+  if (raw >= 999) return 999;
+  return raw;
+}
+
+/**
  * Format a currency value with $ sign and 2 decimal places.
  */
 export function formatCurrency(value: number): string {

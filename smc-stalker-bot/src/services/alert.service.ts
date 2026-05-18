@@ -80,10 +80,10 @@ export function createAlertService(sql: Sql) {
         atRiskTowns = await townRepo.findAll();
       }
 
-      // Filter by threshold
+      // Filter by threshold (≤ so towns at exactly N days are included)
       const thresholdTowns = atRiskTowns
         .filter((t) => t.bank > 0 && t.upkeep > 0)
-        .filter((t) => t.bank < t.upkeep * config.threshold_days)
+        .filter((t) => t.bank <= t.upkeep * config.threshold_days)
         .map((t) => ({
           townName: t.name,
           nationName: null, // Will be populated below

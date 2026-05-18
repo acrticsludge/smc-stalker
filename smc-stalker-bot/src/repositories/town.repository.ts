@@ -92,7 +92,7 @@ export function createTownRepository(sql: Sql) {
       return sql<TownRow[]>`
         SELECT * FROM towns
         WHERE upkeep > 0
-          AND (bank < 0 OR bank < (upkeep * ${maxUpkeepDays}))
+          AND (bank < 0 OR bank <= (upkeep * ${maxUpkeepDays}))
         ORDER BY (bank / NULLIF(upkeep, 0)) ASC
       `;
     },

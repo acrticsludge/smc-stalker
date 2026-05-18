@@ -18,10 +18,12 @@ import { registerAlertStatusCommand } from './alerts/status.js';
 import { registerAlertsViewCommand } from './alerts/view.js';
 import { registerHelpCommand } from './help.js';
 import { registerAccessCommand } from './access.js';
+import { registerPlayerCommand } from './player.js';
 
 export function registerAllCommands(sql: Sql): void {
   registerHelpCommand(sql);
   registerAccessCommand(sql);
+  registerPlayerCommand(sql);
 
   registerWhitelistCommands(sql);
   registerAdminCommands(sql);

@@ -11,7 +11,7 @@ import { defineCommand } from '../register.js';
 import { createNationRepository } from '../../repositories/nation.repository.js';
 import { createTownRepository } from '../../repositories/town.repository.js';
 import { infoEmbed, dangerEmbed } from '../../lib/embed-builder.js';
-import { escapeMD, formatCurrency, sectioned } from '../../lib/format.js';
+import { escapeMD, formatCurrency, sectioned, displayDays } from '../../lib/format.js';
 import { formatDateLongGMT } from '../../lib/dates.js';
 
 export function registerUpkeepNationCommand(sql: Sql): void {
@@ -55,7 +55,16 @@ export function registerUpkeepNationCommand(sql: Sql): void {
       const totalBank = towns.reduce((s, t) => s + t.bank, 0);
       const totalUpkeep = towns.reduce((s, t) => s + t.upkeep, 0);
       const totalResidents = towns.reduce((s, t) => s + t.residents, 0);
-      const atRiskCount = towns.filter((t) => t.upkeep > 0 && t.bank < t.upkeep * 7).length;
+      const atRiskCount = towns.filter((t) => t.upkeep > 0 && t.bank <= t.upkeep * 7).length;
+
+      // Build town list (truncate if >20)
+      const townListFields =
+        towns.length <= 20
+          ? towns.map((t) => `• ${escapeMD(t.name)}`)
+          : [
+              ...towns.slice(0, 18).map((t) => `• ${escapeMD(t.name)}`),
+              `… and ${towns.length - 18} more`,
+            ];
 
       const sections: { title?: string; fields: string[] }[] = [
         {
@@ -75,6 +84,10 @@ export function registerUpkeepNationCommand(sql: Sql): void {
           ],
         },
         {
+          title: `🏘️ Towns (${towns.length})`,
+          fields: townListFields,
+        },
+        {
           fields: [
             `**At Risk (< 7 days):** ${atRiskCount}`,
             `**Last Seen:** ${formatDateLongGMT(nation.last_seen_at)}`,
@@ -84,7 +97,7 @@ export function registerUpkeepNationCommand(sql: Sql): void {
 
       if (thresholdDays) {
         const atRiskTowns = towns
-          .filter((t) => t.upkeep > 0 && t.bank < t.upkeep * thresholdDays)
+          .filter((t) => t.upkeep > 0 && t.bank <= t.upkeep * thresholdDays)
           .sort((a, b) => {
             const aD = a.upkeep > 0 ? a.bank / a.upkeep : 999;
             const bD = b.upkeep > 0 ? b.bank / b.upkeep : 999;
@@ -93,7 +106,8 @@ export function registerUpkeepNationCommand(sql: Sql): void {
 
         if (atRiskTowns.length > 0) {
           const riskLines = atRiskTowns.map((t) => {
-            const daysLeft = t.bank <= 0 ? -1 : (t.upkeep > 0 ? Math.floor(t.bank / t.upkeep) : 999);
+            const rawDays = t.bank <= 0 ? -1 : (t.upkeep > 0 ? Math.floor(t.bank / t.upkeep) : 999);
+            const daysLeft = displayDays(rawDays);
             const d = daysLeft === -1 ? '💀 insolvent' : `${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
             return `• **${escapeMD(t.name)}** — ${formatCurrency(t.bank)} bank, ${formatCurrency(t.upkeep)}/day, **${d}**`;
           });

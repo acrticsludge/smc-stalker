@@ -12,7 +12,7 @@ import { createTownRepository } from '../../repositories/town.repository.js';
 import { createNationRepository } from '../../repositories/nation.repository.js';
 import { createTownSnapshotRepository } from '../../repositories/town-snapshot.repository.js';
 import { infoEmbed, dangerEmbed } from '../../lib/embed-builder.js';
-import { escapeMD, formatCurrency, sectioned } from '../../lib/format.js';
+import { escapeMD, formatCurrency, sectioned, displayDays } from '../../lib/format.js';
 import { formatDateLongGMT } from '../../lib/dates.js';
 
 const PLAYER_HEAD = 'https://mc-heads.net/avatar';
@@ -53,8 +53,9 @@ export function registerUpkeepTownCommand(sql: Sql): void {
       // Use nation color if available, else town's own color, else default
       const embedColor = nationColor ?? town.color ?? undefined;
 
-      const daysUntilInsolvent =
+      const rawDays =
         town.bank <= 0 ? -1 : (town.upkeep > 0 ? Math.floor(town.bank / town.upkeep) : 999);
+      const daysUntilInsolvent = displayDays(rawDays);
 
       const daysDisplay =
         daysUntilInsolvent === -1
