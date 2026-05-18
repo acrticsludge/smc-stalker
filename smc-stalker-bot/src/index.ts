@@ -18,6 +18,7 @@ import { createDbClient, closeDb } from './db/client.js';
 import { startBot, stopBot } from './bot.js';
 import { registerAllCommands } from './commands/index.js';
 import { setDiscordClient } from './commands/access.js';
+import { setWhitelistClient } from './commands/admin/whitelist.js';
 import { setInteractionClient } from './events/interaction-create.js';
 import { startPoller } from './workers/poller.js';
 import { recordBotStart } from './services/health.service.js';
@@ -57,6 +58,7 @@ function main(): void {
 
       // Wire client reference for button interactions and DM notifications
       setDiscordClient(client);
+      setWhitelistClient(client);
       setInteractionClient(client);
 
       // 7. Start poller

@@ -2,19 +2,25 @@
  * /admin whitelist — Superadmin-only guild whitelist management.
  *
  * Guild name is NOT required — guild ID is the sole source of trust.
- * Uses INSERT ... ON CONFLICT so it works even if the guild hasn't
- * been seen by the bot yet.
+ * After whitelisting, slash commands are deployed to that guild immediately.
  */
 
 import {
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
+  type Client,
 } from 'discord.js';
 import type { Sql } from 'postgres';
-import { defineCommand } from '../register.js';
+import { defineCommand, deployCommands } from '../register.js';
 import { createGuildRepository } from '../../repositories/guild.repository.js';
 import { getAuth } from '../../services/auth.service.js';
 import { infoEmbed, successEmbed, dangerEmbed } from '../../lib/embed-builder.js';
+
+let discordClient: Client | null = null;
+
+export function setWhitelistClient(client: Client): void {
+  discordClient = client;
+}
 
 export function registerWhitelistCommands(sql: Sql): void {
   const guildRepo = createGuildRepository(sql);
@@ -60,11 +66,22 @@ export function registerWhitelistCommands(sql: Sql): void {
           // INSERT ... ON CONFLICT handles both new and existing guilds
           const guild = await guildRepo.setWhitelisted(guildId, true);
 
+          // Deploy slash commands to the newly whitelisted guild
+          const token = discordClient?.token;
+          const clientUser = discordClient?.user;
+          if (token && clientUser) {
+            try {
+              await deployCommands(token, clientUser.id, guildId);
+            } catch {
+              // Non-fatal — commands will deploy on next bot restart
+            }
+          }
+
           await interaction.editReply({
             embeds: [
               successEmbed(
                 'Guild Whitelisted',
-                `Guild \`${guildId}\` (**${guild.name || 'Unknown'}**) is now whitelisted. Ordinary users can now use commands.`,
+                `Guild \`${guildId}\` (**${guild.name || 'Unknown'}**) is now whitelisted. Commands deployed.`,
               ),
             ],
           });
