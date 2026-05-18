@@ -27,6 +27,7 @@ const HELP_CATEGORIES = [
       { name: '/alert-configure friendly add|remove|list', desc: 'Manage the friendly-nation watchlist for low-funds alerts.' },
       { name: '/alert-configure enemy add|remove|list', desc: 'Manage the enemy-nation watchlist for activity change detection.' },
       { name: '/alert-status', desc: 'View all active alert configurations for this server.' },
+      { name: '/alerts', desc: 'Unified overview — all alert configs plus friendly/enemy nation lists.' },
     ],
   },
   {
@@ -39,6 +40,7 @@ const HELP_CATEGORIES = [
       { name: '/admin-admin remove', desc: 'Remove guild admin status from a user.' },
       { name: '/admin-admin list', desc: 'List all admins for a guild.' },
       { name: '/admin-inspect', desc: 'View full configuration details for a guild.' },
+      { name: '/admin-toggle-auth', desc: 'Enable or disable auth checks for a guild (open access mode).' },
     ],
   },
   {

@@ -10,11 +10,13 @@ import type { Sql } from 'postgres';
 import { registerWhitelistCommands } from './admin/whitelist.js';
 import { registerAdminCommands } from './admin/manage-admin.js';
 import { registerInspectCommand } from './admin/inspect.js';
+import { registerToggleAuthCommand } from './admin/toggle-auth.js';
 import { registerUpkeepTownCommand } from './upkeep/town.js';
 import { registerUpkeepNationCommand } from './upkeep/nation.js';
 import { registerListCommands } from './upkeep/list.js';
 import { registerAlertConfigureCommand } from './alerts/configure.js';
 import { registerAlertStatusCommand } from './alerts/status.js';
+import { registerAlertsViewCommand } from './alerts/view.js';
 import { registerHelpCommand } from './help.js';
 
 /**
@@ -28,6 +30,7 @@ export function registerAllCommands(sql: Sql): void {
   registerWhitelistCommands(sql);
   registerAdminCommands(sql);
   registerInspectCommand(sql);
+  registerToggleAuthCommand(sql);
 
   // Upkeep commands
   registerUpkeepTownCommand(sql);
@@ -37,4 +40,5 @@ export function registerAllCommands(sql: Sql): void {
   // Alert commands
   registerAlertConfigureCommand(sql);
   registerAlertStatusCommand(sql);
+  registerAlertsViewCommand(sql);
 }

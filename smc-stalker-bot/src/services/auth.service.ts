@@ -3,6 +3,10 @@
  *
  * Determines if a user is authorized to use the bot in a given guild.
  * Only the superadmin has global access. All other access is guild-scoped.
+ *
+ * Auth can be toggled off per-guild via the `auth_enabled` config key.
+ * When disabled, all authorization checks are bypassed and anyone can
+ * use commands in that guild.
  */
 
 import type { ChatInputCommandInteraction } from 'discord.js';
@@ -11,6 +15,7 @@ import { SUPERADMIN_ID } from '../config/constants.js';
 import { createGuildRepository } from '../repositories/guild.repository.js';
 import { createGuildUserRepository } from '../repositories/guild-user.repository.js';
 import { createGuildRoleRepository } from '../repositories/guild-role.repository.js';
+import { createGuildConfigRepository } from '../repositories/guild-config.repository.js';
 
 export interface AuthResult {
   authorized: boolean;
@@ -49,10 +54,11 @@ export function getAuth(
  *
  * Authorization levels (first match wins):
  *  1. Superadmin → full access to everything
- *  2. Guild whitelisted AND user is guild admin → access
- *  3. Guild whitelisted AND user has authorized role → access
- *  4. Guild whitelisted AND user is individually authorized → access
- *  5. Otherwise → denied
+ *  2. Guild-level `auth_enabled` config is false → everyone authorized
+ *  3. Guild whitelisted AND user is guild admin → access
+ *  4. Guild whitelisted AND user has authorized role → access
+ *  5. Guild whitelisted AND user is individually authorized → access
+ *  6. Otherwise → denied
  */
 export async function checkAuthorization(
   interaction: ChatInputCommandInteraction,
@@ -82,6 +88,22 @@ export async function checkAuthorization(
       isSuperAdmin: false,
       isGuildAdmin: false,
       guildId: null,
+    };
+    setAuth(interaction, result);
+    return result;
+  }
+
+  const configRepo = createGuildConfigRepository(sql);
+
+  // Check if auth is explicitly disabled for this guild
+  const authEnabled = await configRepo.getTyped<boolean>(guildId, 'auth_enabled');
+  if (authEnabled === false) {
+    const result: AuthResult = {
+      authorized: true,
+      reason: 'Auth disabled — open access',
+      isSuperAdmin: false,
+      isGuildAdmin: false,
+      guildId,
     };
     setAuth(interaction, result);
     return result;
