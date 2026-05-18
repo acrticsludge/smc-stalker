@@ -89,7 +89,7 @@ export function createAlertService(sql: Sql) {
           nationName: null, // Will be populated below
           bank: t.bank,
           upkeep: t.upkeep,
-          daysRemaining: t.upkeep > 0 ? Math.floor(t.bank / t.upkeep) : 999,
+          daysRemaining: t.bank <= 0 ? -1 : (t.upkeep > 0 ? Math.floor(t.bank / t.upkeep) : 999),
         }));
 
       if (thresholdTowns.length === 0) {

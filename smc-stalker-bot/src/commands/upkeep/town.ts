@@ -46,7 +46,7 @@ export function registerUpkeepTownCommand(sql: Sql): void {
       }
 
       const daysUntilInsolvent =
-        town.upkeep > 0 ? Math.floor(town.bank / town.upkeep) : 999;
+        town.bank <= 0 ? -1 : (town.upkeep > 0 ? Math.floor(town.bank / town.upkeep) : 999);
 
       const latestSnapshot = await snapshotRepo.findLatestByTown(town.id);
 
@@ -72,7 +72,7 @@ export function registerUpkeepTownCommand(sql: Sql): void {
         `**Founded:** ${town.founded ? formatDateLongGMT(town.founded) : 'Unknown'}`,
         `**Bank:** $${town.bank.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
         `**Upkeep:** $${town.upkeep.toLocaleString(undefined, { minimumFractionDigits: 2 })}/day`,
-        `**Days Until Insolvent:** ${daysUntilInsolvent}`,
+        `**Days Until Insolvent:** ${daysUntilInsolvent === -1 ? '💀 Insolvent' : daysUntilInsolvent === 999 ? '∞' : daysUntilInsolvent}`,
         `**Last Seen:** ${formatDateLongGMT(town.last_seen_at)}`,
       ].join('\n'));
 

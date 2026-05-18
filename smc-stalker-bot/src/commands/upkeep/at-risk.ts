@@ -74,25 +74,37 @@ export function registerAtRiskCommand(sql: Sql): void {
       });
 
       // Build paginated pages
-      const pages = [];
-      for (let i = 0; i < atRisk.length; i += ITEMS_PER_PAGE) {
-        const chunk = atRisk.slice(i, i + ITEMS_PER_PAGE);
+        const pages = [];
+      const total = atRisk.length;
+      for (let i = 0; i < total; i += ITEMS_PER_PAGE) {
+        const end = Math.min(i + ITEMS_PER_PAGE, total);
+        const chunk = atRisk.slice(i, end);
         const description = chunk
           .map((t) => {
             const nationName = t.nation_id ? (nationMap.get(t.nation_id) ?? 'Unknown') : 'None';
-            const daysLeft = t.upkeep > 0 ? Math.floor(t.bank / t.upkeep) : 999;
+            let daysDisplay: string;
+            if (t.bank <= 0) {
+              daysDisplay = '💀 **insolvent**';
+            } else if (t.upkeep > 0) {
+              const daysLeft = Math.floor(t.bank / t.upkeep);
+              daysDisplay = `**${daysLeft} day${daysLeft === 1 ? '' : 's'}** left`;
+            } else {
+              daysDisplay = '**unknown**';
+            }
             return (
               `• **${t.name}** [${nationName}] — ` +
               `$${t.upkeep.toFixed(2)}/day, bank: $${t.bank.toFixed(2)}, ` +
-              `**${daysLeft} day${daysLeft === 1 ? '' : 's'}** left`
+              daysDisplay
             );
           })
           .join('\n');
 
+        const rangeLabel = i + 1 === end ? `${i + 1}` : `${i + 1}–${end}`;
+
         pages.push({
           embeds: [
             infoEmbed(
-              `🏦 At-Risk Towns (${i + 1}–${Math.min(i + ITEMS_PER_PAGE, atRisk.length)} of ${atRisk.length}) — threshold: ${days} day${days === 1 ? '' : 's'}`,
+              `🏦 At-Risk Towns (${rangeLabel} of ${total}) — threshold: ${days} day${days === 1 ? '' : 's'}`,
               description,
             ),
           ],

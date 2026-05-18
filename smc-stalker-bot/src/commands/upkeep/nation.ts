@@ -84,10 +84,11 @@ export function registerUpkeepNationCommand(sql: Sql): void {
         if (atRiskTowns.length > 0) {
           lines.push('', `**Towns at Risk (< ${thresholdDays} days):**`);
           for (const t of atRiskTowns) {
-            const daysLeft = t.upkeep > 0 ? Math.floor(t.bank / t.upkeep) : 999;
+            const daysLeft = t.bank <= 0 ? -1 : (t.upkeep > 0 ? Math.floor(t.bank / t.upkeep) : 999);
+            const daysDisplay = daysLeft === -1 ? '💀 insolvent' : `${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
             lines.push(
               `• **${t.name}** — $${t.bank.toFixed(2)} bank, ` +
-              `$${t.upkeep.toFixed(2)}/day upkeep, **${daysLeft} day${daysLeft === 1 ? '' : 's'}**`,
+              `$${t.upkeep.toFixed(2)}/day upkeep, **${daysDisplay}**`,
             );
           }
         } else {

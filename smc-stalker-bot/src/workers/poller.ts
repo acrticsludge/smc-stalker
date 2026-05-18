@@ -158,7 +158,7 @@ async function dispatchUpkeepAlert(
     const description = towns
       .map(
         (t) =>
-          `• **${t.townName}** — Bank: $${t.bank.toFixed(2)} | Upkeep: $${t.upkeep.toFixed(2)}/day | **${t.daysRemaining} days** remaining`,
+          `• **${t.townName}** — Bank: $${t.bank.toFixed(2)} | Upkeep: $${t.upkeep.toFixed(2)}/day | **${t.daysRemaining === -1 ? '💀 insolvent' : `${t.daysRemaining} days remaining`}**`,
       )
       .join('\n');
 
