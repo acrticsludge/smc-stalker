@@ -1,5 +1,6 @@
 /**
- * /upkeep nation — View a nation's upkeep overview.
+ * /upkeep-nation — View a nation's upkeep overview and optionally
+ * list its at-risk towns within N days.
  */
 
 import {
@@ -19,12 +20,20 @@ export function registerUpkeepNationCommand(sql: Sql): void {
   defineCommand({
     data: new SlashCommandBuilder()
       .setName('upkeep-nation')
-      .setDescription('View a nation\'s upkeep overview')
+      .setDescription('View a nation\'s upkeep overview and at-risk towns')
       .addStringOption((opt) =>
         opt.setName('name').setDescription('Nation name').setRequired(true),
+      )
+      .addIntegerOption((opt) =>
+        opt
+          .setName('days')
+          .setDescription('Show towns at risk within N days (default: show summary)')
+          .setRequired(false)
+          .setMinValue(1),
       ),
     async execute(interaction: ChatInputCommandInteraction): Promise<void> {
       const name = interaction.options.getString('name', true);
+      const thresholdDays = interaction.options.getInteger('days');
 
       const nation = await nationRepo.findByName(name);
       if (!nation) {
@@ -46,19 +55,45 @@ export function registerUpkeepNationCommand(sql: Sql): void {
       const totalBank = towns.reduce((sum, t) => sum + t.bank, 0);
       const totalUpkeep = towns.reduce((sum, t) => sum + t.upkeep, 0);
       const totalResidents = towns.reduce((sum, t) => sum + t.residents, 0);
-      const atRiskTowns = towns.filter((t) => t.upkeep > 0 && t.bank < t.upkeep * 7).length;
+      const atRiskCount = towns.filter((t) => t.upkeep > 0 && t.bank < t.upkeep * 7).length;
 
-      const embed = infoEmbed(`🏛️ ${name}`, [
+      const lines: string[] = [
         `**Towns:** ${towns.length}`,
         `**Total Residents:** ${totalResidents}`,
         `**Total Bank:** $${totalBank.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
         `**Total Upkeep:** $${totalUpkeep.toLocaleString(undefined, { minimumFractionDigits: 2 })}/day`,
         `**Average Bank/Town:** $${(totalBank / towns.length).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-        `**Towns at Risk (< 7 days):** ${atRiskTowns}`,
+        `**Towns at Risk (< 7 days):** ${atRiskCount}`,
         `**Last Seen:** <t:${Math.floor(new Date(nation.last_seen_at).getTime() / 1000)}:R>`,
-      ].join('\n'));
+      ];
 
-      await interaction.editReply({ embeds: [embed] });
+      // If a threshold was given, list the at-risk towns inline
+      if (thresholdDays) {
+        const atRiskTowns = towns
+          .filter((t) => t.upkeep > 0 && t.bank < t.upkeep * thresholdDays)
+          .sort((a, b) => {
+            const aDays = a.upkeep > 0 ? a.bank / a.upkeep : 999;
+            const bDays = b.upkeep > 0 ? b.bank / b.upkeep : 999;
+            return aDays - bDays;
+          });
+
+        if (atRiskTowns.length > 0) {
+          lines.push('', `**Towns at Risk (< ${thresholdDays} days):**`);
+          for (const t of atRiskTowns) {
+            const daysLeft = t.upkeep > 0 ? Math.floor(t.bank / t.upkeep) : 999;
+            lines.push(
+              `• **${t.name}** — $${t.bank.toFixed(2)} bank, ` +
+              `$${t.upkeep.toFixed(2)}/day upkeep, **${daysLeft} day${daysLeft === 1 ? '' : 's'}**`,
+            );
+          }
+        } else {
+          lines.push('', `No towns at risk within ${thresholdDays} days. ✅`);
+        }
+      }
+
+      await interaction.editReply({
+        embeds: [infoEmbed(`🏛️ ${name}`, lines.join('\n'))],
+      });
     },
   });
 }

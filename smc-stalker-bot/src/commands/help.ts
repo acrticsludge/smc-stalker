@@ -18,6 +18,7 @@ const HELP_CATEGORIES = [
       { name: '/upkeep-nation <name>', desc: 'View a nation\'s aggregate upkeep overview — totals, averages, at-risk towns.' },
       { name: '/list towns', desc: 'List all towns with pagination (bank, upkeep, residents).' },
       { name: '/list nations', desc: 'List all tracked nations with pagination.' },
+      { name: '/at-risk <days>', desc: 'List ALL towns going bankrupt within N days, sorted by urgency, with nation names.' },
     ],
   },
   {

@@ -16,8 +16,9 @@ All bot commands are slash commands — type `/` in any channel the bot can see 
 |---|---|
 | `/upkeep-town <name>` | Shows a town's bank balance, daily upkeep cost, residents, mayor, nation, and how many days until it runs out of funds. |
 | `/upkeep-nation <name>` | Shows a nation-wide breakdown — total bank, total upkeep, average per town, and how many towns are at risk (bank < 7 days of upkeep). |
-| `/list towns` | Paginated list of every town with its upkeep and bank. Use the ◀ ▶ buttons to navigate. |
+| `/list towns` | Paginated list of every town with its nation, upkeep, and bank. Use the ◀ ▶ buttons to navigate. |
 | `/list nations` | Paginated list of every nation. |
+| `/at-risk <days>` | Paginated list of ALL towns going bankrupt within N days, sorted by urgency, with nation names shown. |
 
 #### Alerts
 

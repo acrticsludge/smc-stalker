@@ -14,6 +14,7 @@ import { registerToggleAuthCommand } from './admin/toggle-auth.js';
 import { registerUpkeepTownCommand } from './upkeep/town.js';
 import { registerUpkeepNationCommand } from './upkeep/nation.js';
 import { registerListCommands } from './upkeep/list.js';
+import { registerAtRiskCommand } from './upkeep/at-risk.js';
 import { registerAlertConfigureCommand } from './alerts/configure.js';
 import { registerAlertStatusCommand } from './alerts/status.js';
 import { registerAlertsViewCommand } from './alerts/view.js';
@@ -36,6 +37,7 @@ export function registerAllCommands(sql: Sql): void {
   registerUpkeepTownCommand(sql);
   registerUpkeepNationCommand(sql);
   registerListCommands(sql);
+  registerAtRiskCommand(sql);
 
   // Alert commands
   registerAlertConfigureCommand(sql);

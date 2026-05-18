@@ -1,5 +1,6 @@
 /**
  * /list — List towns or nations with pagination.
+ * Towns always show their nation name.
  */
 
 import {
@@ -28,7 +29,6 @@ export function registerListCommands(sql: Sql): void {
     async execute(interaction: ChatInputCommandInteraction): Promise<void> {
       const subcommand = interaction.options.getSubcommand();
 
-      // Paginated list commands need a guild text channel
       if (!interaction.channel || !('guild' in interaction.channel)) {
         await interaction.editReply({
           embeds: [infoEmbed('Error', 'This command must be used in a server channel.')],
@@ -38,7 +38,11 @@ export function registerListCommands(sql: Sql): void {
       const channel = interaction.channel;
 
       if (subcommand === 'towns') {
-        const towns = await townRepo.findAll();
+        const [towns, allNations] = await Promise.all([
+          townRepo.findAll(),
+          nationRepo.findAll(),
+        ]);
+        const nationMap = new Map(allNations.map((n) => [n.id, n.name]));
 
         if (towns.length === 0) {
           await interaction.editReply({
@@ -47,28 +51,31 @@ export function registerListCommands(sql: Sql): void {
           return;
         }
 
-        // Build paginated pages
         const pages = [];
         for (let i = 0; i < towns.length; i += ITEMS_PER_PAGE) {
           const chunk = towns.slice(i, i + ITEMS_PER_PAGE);
           const description = chunk
-            .map(
-              (t) =>
-                `• **${t.name}** — $${t.upkeep.toFixed(2)}/day | Bank: $${t.bank.toFixed(2)} | Residents: ${t.residents}`,
-            )
+            .map((t) => {
+              const nationName = t.nation_id
+                ? (nationMap.get(t.nation_id) ?? 'Unknown')
+                : 'None';
+              return (
+                `• **${t.name}** [${nationName}] — ` +
+                `$${t.upkeep.toFixed(2)}/day, bank: $${t.bank.toFixed(2)}, res: ${t.residents}`
+              );
+            })
             .join('\n');
 
           pages.push({
             embeds: [
               infoEmbed(
-                `Towns (${i + 1}-${Math.min(i + ITEMS_PER_PAGE, towns.length)} of ${towns.length})`,
+                `Towns (${i + 1}–${Math.min(i + ITEMS_PER_PAGE, towns.length)} of ${towns.length})`,
                 description,
               ),
             ],
           });
         }
 
-        // Delete defer reply and send paginated message
         if (pages.length > 0) {
           await interaction.deleteReply();
           await sendPaginated(channel, pages, interaction.user.id);
@@ -96,14 +103,13 @@ export function registerListCommands(sql: Sql): void {
           pages.push({
             embeds: [
               infoEmbed(
-                `Nations (${i + 1}-${Math.min(i + ITEMS_PER_PAGE, nations.length)} of ${nations.length})`,
+                `Nations (${i + 1}–${Math.min(i + ITEMS_PER_PAGE, nations.length)} of ${nations.length})`,
                 description,
               ),
             ],
           });
         }
 
-        // Delete defer reply and send paginated message
         await interaction.deleteReply();
         await sendPaginated(channel, pages, interaction.user.id);
       }
