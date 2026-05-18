@@ -10,11 +10,17 @@ import {
   type RESTPostAPIApplicationCommandsJSONBody,
   type SlashCommandBuilder,
   type SlashCommandSubcommandsOnlyBuilder,
+  type SlashCommandOptionsOnlyBuilder,
   type ChatInputCommandInteraction,
 } from 'discord.js';
 
+type CommandData =
+  | SlashCommandBuilder
+  | SlashCommandSubcommandsOnlyBuilder
+  | SlashCommandOptionsOnlyBuilder;
+
 export interface CommandDefinition {
-  data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder;
+  data: CommandData;
   execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
 }
 
