@@ -27,6 +27,7 @@ export interface UpkeepAlertPayload {
   guildId: string;
   channelId: string;
   roleId: string | null;
+  nationPings: Record<string, string | null>;
   configId: string;
   nationName: string | null;
   alertType: 'upkeep' | 'friendly';

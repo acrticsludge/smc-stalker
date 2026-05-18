@@ -105,6 +105,7 @@ export function createAlertService(sql: Sql) {
         guildId: config.guild_id,
         channelId: config.channel_id,
         roleId: config.role_id,
+        nationPings: config.nation_pings,
         configId: config.id,
         nationName: config.nation_name,
         alertType: config.type as 'upkeep' | 'friendly',

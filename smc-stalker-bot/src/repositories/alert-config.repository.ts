@@ -42,18 +42,20 @@ export function createAlertConfigRepository(sql: Sql) {
       nationName: string | null;
       channelId: string;
       roleId: string | null;
+      nationPings?: Record<string, string | null>;
       scheduleTimes: string[];
       cooldownMin: number;
       thresholdDays: number;
     }): Promise<AlertConfigRow> {
       const rows = await sql<AlertConfigRow[]>`
         INSERT INTO alert_configs (
-          guild_id, type, nation_name, channel_id, role_id,
+          guild_id, type, nation_name, channel_id, role_id, nation_pings,
           schedule_times, cooldown_min, threshold_days
         )
         VALUES (
           ${config.guildId}, ${config.type}, ${config.nationName},
           ${config.channelId}, ${config.roleId},
+          ${sql.json(config.nationPings ?? {})},
           ${sql.json(config.scheduleTimes)},
           ${config.cooldownMin}, ${config.thresholdDays}
         )
@@ -73,6 +75,7 @@ export function createAlertConfigRepository(sql: Sql) {
         thresholdDays?: number;
         lastAlertAt?: string | null;
         nationName?: string | null;
+        nationPings?: Record<string, string | null>;
       },
     ): Promise<AlertConfigRow | null> {
       const rawEntries = Object.entries(changes);

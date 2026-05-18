@@ -46,6 +46,7 @@ export interface AlertConfigRow {
   nation_name: string | null;
   channel_id: string;
   role_id: string | null;
+  nation_pings: Record<string, string | null>;
   enabled: boolean;
   schedule_times: string[];
   cooldown_min: number;

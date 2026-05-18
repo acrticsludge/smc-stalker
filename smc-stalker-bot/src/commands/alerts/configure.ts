@@ -46,12 +46,6 @@ export function registerAlertConfigureCommand(sql: Sql): void {
                   .setName('threshold-days')
                   .setDescription('Alert when bank < N days of upkeep (default: 7)')
                   .setRequired(false),
-              )
-              .addRoleOption((opt) =>
-                opt
-                  .setName('role')
-                  .setDescription('Role to ping')
-                  .setRequired(false),
               ),
           ),
       )
@@ -62,12 +56,18 @@ export function registerAlertConfigureCommand(sql: Sql): void {
           .addSubcommand((sub) =>
             sub
               .setName('add')
-              .setDescription('Add a friendly nation')
+              .setDescription('Add a friendly nation (optional role ping)')
               .addStringOption((opt) =>
                 opt
                   .setName('nation')
                   .setDescription('Nation name')
                   .setRequired(true),
+              )
+              .addRoleOption((opt) =>
+                opt
+                  .setName('role')
+                  .setDescription('Role to ping when this nation has at-risk towns')
+                  .setRequired(false),
               ),
           )
           .addSubcommand((sub) =>
@@ -144,7 +144,6 @@ export function registerAlertConfigureCommand(sql: Sql): void {
         const channel = interaction.options.getChannel('channel', true);
         const thresholdDays =
           interaction.options.getInteger('threshold-days') ?? 7;
-        const role = interaction.options.getRole('role');
         const timeRaw = interaction.options.getString('time');
 
         const scheduleTimes: string[] = [];
@@ -168,7 +167,7 @@ export function registerAlertConfigureCommand(sql: Sql): void {
           type: 'upkeep',
           nationName: null,
           channelId: channel.id,
-          roleId: role?.id ?? null,
+          roleId: null,
           scheduleTimes,
           cooldownMin: 60,
           thresholdDays,
@@ -178,13 +177,16 @@ export function registerAlertConfigureCommand(sql: Sql): void {
           embeds: [
             successEmbed(
               'Upkeep Alert Created',
-              `Alerts will be sent to <#${channel.id}>${role ? `, pinging <@&${role.id}>` : ''}${scheduleNote} when a town has less than **${thresholdDays} days** of upkeep remaining.`,
+              `Alerts will be sent to <#${channel.id}>${scheduleNote} when a town has less than **${thresholdDays} days** of upkeep remaining.`,
             ),
           ],
         });
-      } else if (group === 'friendly') {
+      } else       if (group === 'friendly') {
         if (subcommand === 'add') {
           const nation = interaction.options.getString('nation', true);
+          const role = interaction.options.getRole('role');
+
+          // Add nation to friendly list
           const existing = await configRepo.getTyped<string[]>(guildId, 'friendly_nations');
           const nations = existing ?? [];
           if (!nations.includes(nation)) {
@@ -192,8 +194,24 @@ export function registerAlertConfigureCommand(sql: Sql): void {
           }
           await configRepo.set(guildId, 'friendly_nations', nations);
 
+          // If a role was provided, store it as the per-nation ping
+          if (role) {
+            const configs = await alertRepo.findByGuild(guildId);
+            const target = configs.find(
+              (c) => c.type === 'upkeep' || c.type === 'friendly',
+            );
+            if (target) {
+              const currentPings = target.nation_pings;
+              currentPings[nation] = role.id;
+              await alertRepo.update(target.id, { nationPings: currentPings });
+            }
+          }
+
+          const roleDesc = role
+            ? ` with <@&${role.id}> pings`
+            : '';
           await interaction.editReply({
-            embeds: [successEmbed('Friendly Nation Added', `**${nation}** is now tracked as friendly.`)],
+            embeds: [successEmbed('Friendly Nation Added', `**${nation}** is now tracked as friendly${roleDesc}.`)],
           });
         } else if (subcommand === 'remove') {
           const nation = interaction.options.getString('nation', true);

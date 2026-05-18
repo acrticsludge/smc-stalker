@@ -11,7 +11,7 @@ import { createLogger } from '../lib/logger.js';
 import { createPollService } from '../services/poll.service.js';
 import { createAlertService } from '../services/alert.service.js';
 import { POLL_INTERVAL_MS } from '../config/constants.js';
-import type { AlertPayload, UpkeepAlertPayload, EnemyAlertPayload } from '../types/alerts.js';
+import type { AlertPayload, UpkeepAlertPayload, EnemyAlertPayload, UpkeepAlertTown } from '../types/alerts.js';
 import { warningEmbed, dangerEmbed } from '../lib/embed-builder.js';
 
 const logger = createLogger('poller');
@@ -24,9 +24,6 @@ export interface PollerConfig {
 
 /**
  * Start the polling loop.
- *
- * Executes immediately then repeats on the configured interval.
- * Never throws from the top level — catches all errors and logs them.
  */
 export function startPoller(
   config: PollerConfig,
@@ -52,7 +49,6 @@ export function startPoller(
     const startTime = Date.now();
 
     try {
-      // 1. Execute poll
       const pollResult = await pollService.executePoll();
 
       if (!pollResult.success) {
@@ -71,10 +67,8 @@ export function startPoller(
         'Poll completed, evaluating alerts...',
       );
 
-      // 2. Evaluate alerts
       const alertPayloads = await alertService.evaluateAll();
 
-      // 3. Dispatch alerts
       for (const payload of alertPayloads) {
         try {
           await dispatchAlert(payload, discordClient);
@@ -96,7 +90,6 @@ export function startPoller(
     }
   }
 
-  // Run immediately, then on interval
   logger.info({ intervalMs: config.intervalMs ?? POLL_INTERVAL_MS }, 'Starting poller');
   void tick();
   activeTimer = setInterval(() => { void tick(); }, config.intervalMs ?? POLL_INTERVAL_MS);
@@ -112,13 +105,7 @@ export function startPoller(
   };
 }
 
-/**
- * Dispatch an alert payload to the configured Discord channel.
- */
-async function dispatchAlert(
-  payload: AlertPayload,
-  client: Client,
-): Promise<void> {
+async function dispatchAlert(payload: AlertPayload, client: Client): Promise<void> {
   switch (payload.alertType) {
     case 'upkeep':
     case 'friendly':
@@ -131,7 +118,10 @@ async function dispatchAlert(
 }
 
 /**
- * Dispatch an upkeep/friendly alert.
+ * Dispatch an upkeep/friendly alert with per-nation role pings.
+ *
+ * Towns are grouped by nation. Each group is sent as a separate message
+ * with the configured role ping for that nation (if any).
  */
 async function dispatchUpkeepAlert(
   payload: UpkeepAlertPayload,
@@ -144,30 +134,45 @@ async function dispatchUpkeepAlert(
   }
 
   const channel = channelResolved;
-  const roleMention = payload.roleId ? `<@&${payload.roleId}> ` : '';
+
+  // Group towns by nation name
+  const grouped = new Map<string | null, UpkeepAlertTown[]>();
+  for (const town of payload.towns) {
+    const key = town.nationName ?? 'None';
+    const list = grouped.get(key) ?? [];
+    list.push(town);
+    grouped.set(key, list);
+  }
 
   const title =
     payload.alertType === 'friendly'
       ? `⚠️ Friendly Nation Alert`
       : `⚠️ Upkeep Alert`;
 
-  let description = payload.towns
-    .map(
-      (t) =>
-        `• **${t.townName}** — Bank: $${t.bank.toFixed(2)} | Upkeep: $${t.upkeep.toFixed(2)}/day | **${t.daysRemaining} days** remaining`,
-    )
-    .join('\n');
+  for (const [nation, towns] of grouped) {
+    // Look up nation-specific ping; fall back to default roleId
+    const specificPing = nation ? (payload.nationPings[nation] ?? null) : null;
+    const roleId = specificPing ?? payload.roleId;
+    const roleMention = roleId ? `<@&${roleId}> ` : '';
 
-  if (payload.nationName) {
-    description = `Nation: **${payload.nationName}**\n\n${description}`;
+    const description = towns
+      .map(
+        (t) =>
+          `• **${t.townName}** — Bank: $${t.bank.toFixed(2)} | Upkeep: $${t.upkeep.toFixed(2)}/day | **${t.daysRemaining} days** remaining`,
+      )
+      .join('\n');
+
+    const fullDescription = nation && nation !== 'None'
+      ? `Nation: **${nation}**\n\n${description}`
+      : description;
+
+    const embed = warningEmbed(title, fullDescription);
+
+    await channel.send({
+      content: roleMention || undefined,
+      embeds: [embed],
+    });
   }
-
-  const embed = warningEmbed(title, description);
-
-  await channel.send({
-    content: roleMention || undefined,
-    embeds: [embed],
-  });
 }
 
 /**
