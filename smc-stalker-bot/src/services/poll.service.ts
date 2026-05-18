@@ -79,6 +79,7 @@ export function createPollService(config: PollServiceConfig, sql: Sql) {
       let townsUpdated = 0;
       const errors: string[] = [];
       processedTowns.length = 0;
+      nationColors.clear();
 
       // Process each town sequentially
       for (const town of result.towns) {

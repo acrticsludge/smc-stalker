@@ -67,13 +67,13 @@ export function registerUpkeepTownCommand(sql: Sql): void {
       const latestSnapshot = await snapshotRepo.findLatestByTown(town.id);
 
       const residentDisplay =
-        latestSnapshot?.resident_names.length === 1
-          ? escapeMD(latestSnapshot.resident_names[0]!)
-          : latestSnapshot && latestSnapshot.resident_names.length > 5
-            ? `${latestSnapshot.resident_names.slice(0, 5).map(escapeMD).join(', ')} +${latestSnapshot.resident_names.length - 5} more`
-            : latestSnapshot
-              ? latestSnapshot.resident_names.map(escapeMD).join(', ')
-              : 'Unknown';
+        !latestSnapshot || latestSnapshot.resident_names.length === 0
+          ? 'Unknown'
+          : latestSnapshot.resident_names.length === 1
+            ? escapeMD(latestSnapshot.resident_names[0]!)
+            : latestSnapshot.resident_names.length > 5
+              ? `${latestSnapshot.resident_names.slice(0, 5).map(escapeMD).join(', ')} +${latestSnapshot.resident_names.length - 5} more`
+              : latestSnapshot.resident_names.map(escapeMD).join(', ');
 
       const statusIcon =
         latestSnapshot?.status === 'peaceful' ? '☮️' :
