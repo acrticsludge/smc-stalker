@@ -24,7 +24,7 @@ const HELP_CATEGORIES = [
   {
     name: '🔔 Alert Commands',
     commands: [
-      { name: '/alert-configure upkeep create', desc: 'Set up scheduled upkeep alerts — choose channel, threshold days, and role to ping.' },
+      { name: '/alert-configure upkeep create', desc: 'Set up scheduled upkeep alerts — channel, threshold days, and time (GMT).' },
       { name: '/alert-configure friendly add|remove|list', desc: 'Manage the friendly-nation watchlist for low-funds alerts.' },
       { name: '/alert-configure enemy add|remove|list', desc: 'Manage the enemy-nation watchlist for activity change detection.' },
       { name: '/alert-status', desc: 'View all active alert configurations for this server.' },

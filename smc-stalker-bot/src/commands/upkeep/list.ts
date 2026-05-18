@@ -12,6 +12,7 @@ import { defineCommand } from '../register.js';
 import { createTownRepository } from '../../repositories/town.repository.js';
 import { createNationRepository } from '../../repositories/nation.repository.js';
 import { infoEmbed } from '../../lib/embed-builder.js';
+import { formatDateLongGMT } from '../../lib/dates.js';
 import { sendPaginated } from '../../lib/pagination.js';
 
 const ITEMS_PER_PAGE = 15;
@@ -96,7 +97,7 @@ export function registerListCommands(sql: Sql): void {
           const description = chunk
             .map(
               (n) =>
-                `• **${n.name}** — Last seen: <t:${Math.floor(new Date(n.last_seen_at).getTime() / 1000)}:R>`,
+                `• **${n.name}** — Last seen: ${formatDateLongGMT(n.last_seen_at)}`,
             )
             .join('\n');
 

@@ -1,5 +1,9 @@
 /**
  * /admin whitelist — Superadmin-only guild whitelist management.
+ *
+ * Guild name is NOT required — guild ID is the sole source of trust.
+ * Uses INSERT ... ON CONFLICT so it works even if the guild hasn't
+ * been seen by the bot yet.
  */
 
 import {
@@ -8,12 +12,12 @@ import {
 } from 'discord.js';
 import type { Sql } from 'postgres';
 import { defineCommand } from '../register.js';
-import { createGuildService } from '../../services/guild.service.js';
+import { createGuildRepository } from '../../repositories/guild.repository.js';
 import { getAuth } from '../../services/auth.service.js';
 import { infoEmbed, successEmbed, dangerEmbed } from '../../lib/embed-builder.js';
 
 export function registerWhitelistCommands(sql: Sql): void {
-  const guildService = createGuildService(sql);
+  const guildRepo = createGuildRepository(sql);
 
   defineCommand({
     data: new SlashCommandBuilder()
@@ -22,12 +26,9 @@ export function registerWhitelistCommands(sql: Sql): void {
       .addSubcommand((sub) =>
         sub
           .setName('add')
-          .setDescription('Whitelist a guild')
+          .setDescription('Whitelist a guild by ID')
           .addStringOption((opt) =>
             opt.setName('guild-id').setDescription('Discord guild ID').setRequired(true),
-          )
-          .addStringOption((opt) =>
-            opt.setName('name').setDescription('Guild name').setRequired(true),
           ),
       )
       .addSubcommand((sub) =>
@@ -55,14 +56,15 @@ export function registerWhitelistCommands(sql: Sql): void {
       switch (subcommand) {
         case 'add': {
           const guildId = interaction.options.getString('guild-id', true);
-          const name = interaction.options.getString('name', true);
 
-          await guildService.whitelistGuild(guildId, name);
+          // INSERT ... ON CONFLICT handles both new and existing guilds
+          const guild = await guildRepo.setWhitelisted(guildId, true);
+
           await interaction.editReply({
             embeds: [
               successEmbed(
                 'Guild Whitelisted',
-                `Guild **${name}** (\`${guildId}\`) has been whitelisted.`,
+                `Guild \`${guildId}\` (**${guild.name || 'Unknown'}**) is now whitelisted. Ordinary users can now use commands.`,
               ),
             ],
           });
@@ -71,14 +73,14 @@ export function registerWhitelistCommands(sql: Sql): void {
         case 'remove': {
           const guildId = interaction.options.getString('guild-id', true);
 
-          await guildService.removeGuild(guildId);
+          await guildRepo.setWhitelisted(guildId, false);
           await interaction.editReply({
             embeds: [successEmbed('Guild Removed', `Guild \`${guildId}\` has been removed.`)],
           });
           break;
         }
         case 'list': {
-          const guilds = await guildService.listWhitelisted();
+          const guilds = await guildRepo.findWhitelisted();
 
           if (guilds.length === 0) {
             await interaction.editReply({

@@ -12,6 +12,7 @@ import { createTownRepository } from '../../repositories/town.repository.js';
 import { createNationRepository } from '../../repositories/nation.repository.js';
 import { createTownSnapshotRepository } from '../../repositories/town-snapshot.repository.js';
 import { infoEmbed, dangerEmbed } from '../../lib/embed-builder.js';
+import { formatDateLongGMT } from '../../lib/dates.js';
 
 export function registerUpkeepTownCommand(sql: Sql): void {
   const townRepo = createTownRepository(sql);
@@ -68,11 +69,11 @@ export function registerUpkeepTownCommand(sql: Sql): void {
         `**Resident Names:** ${residentNamesDisplay}`,
         `**Nation:** ${nationName}`,
         `**Status:** ${statusDisplay}`,
-        `**Founded:** ${town.founded ?? 'Unknown'}`,
+        `**Founded:** ${town.founded ? formatDateLongGMT(town.founded) : 'Unknown'}`,
         `**Bank:** $${town.bank.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
         `**Upkeep:** $${town.upkeep.toLocaleString(undefined, { minimumFractionDigits: 2 })}/day`,
         `**Days Until Insolvent:** ${daysUntilInsolvent}`,
-        `**Last Seen:** <t:${Math.floor(new Date(town.last_seen_at).getTime() / 1000)}:R>`,
+        `**Last Seen:** ${formatDateLongGMT(town.last_seen_at)}`,
       ].join('\n'));
 
       embed.setFooter({ text: `Town ID: ${town.id}` });

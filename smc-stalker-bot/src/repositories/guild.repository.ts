@@ -36,9 +36,11 @@ export function createGuildRepository(sql: Sql) {
 
     async setWhitelisted(id: string, whitelisted: boolean): Promise<GuildRow> {
       const rows = await sql<GuildRow[]>`
-        UPDATE guilds
-        SET is_whitelisted = ${whitelisted}, updated_at = NOW()
-        WHERE id = ${id}
+        INSERT INTO guilds (id, is_whitelisted)
+        VALUES (${id}, ${whitelisted})
+        ON CONFLICT (id) DO UPDATE SET
+          is_whitelisted = ${whitelisted},
+          updated_at = NOW()
         RETURNING *
       `;
       return rows[0]!;

@@ -11,6 +11,7 @@ import { defineCommand } from '../register.js';
 import { createAlertConfigRepository } from '../../repositories/alert-config.repository.js';
 import { getAuth } from '../../services/auth.service.js';
 import { infoEmbed, dangerEmbed } from '../../lib/embed-builder.js';
+import { formatTimeGMT } from '../../lib/dates.js';
 
 export function registerAlertStatusCommand(sql: Sql): void {
   const alertRepo = createAlertConfigRepository(sql);
@@ -51,7 +52,11 @@ export function registerAlertStatusCommand(sql: Sql): void {
         const type = c.type.toUpperCase();
         const nation = c.nation_name ? ` (${c.nation_name})` : '';
         const role = c.role_id ? ` — pings <@&${c.role_id}>` : '';
-        return `• **${type}**${nation}: ${status} → ${channel}${role}`;
+        const time =
+          c.schedule_times.length > 0
+            ? ` at ${c.schedule_times.map((t) => formatTimeGMT(t)).join(', ')}`
+            : ' (immediate)';
+        return `• **${type}**${nation}: ${status} → ${channel}${role}${time}`;
       });
 
       await interaction.editReply({

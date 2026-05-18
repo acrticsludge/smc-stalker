@@ -38,7 +38,7 @@ export function registerAlertConfigureCommand(sql: Sql): void {
               .addStringOption((opt) =>
                 opt
                   .setName('time')
-                  .setDescription('Alert time in HH:MM (24h). Omit for immediate alerts.')
+                  .setDescription('Alert time in HH:MM (GMT). Omit for immediate alerts.')
                   .setRequired(false),
               )
               .addIntegerOption((opt) =>

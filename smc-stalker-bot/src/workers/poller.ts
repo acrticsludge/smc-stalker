@@ -12,7 +12,7 @@ import { createPollService } from '../services/poll.service.js';
 import { createAlertService } from '../services/alert.service.js';
 import { POLL_INTERVAL_MS } from '../config/constants.js';
 import type { AlertPayload, UpkeepAlertPayload, EnemyAlertPayload, UpkeepAlertTown } from '../types/alerts.js';
-import { warningEmbed, dangerEmbed } from '../lib/embed-builder.js';
+import { warningEmbed, dangerEmbed, successEmbed } from '../lib/embed-builder.js';
 
 const logger = createLogger('poller');
 
@@ -173,6 +173,11 @@ async function dispatchUpkeepAlert(
       embeds: [embed],
     });
   }
+
+  // Confirmation message
+  await channel.send({
+    embeds: [successEmbed('✅ Alert Dispatched', `Monitored ${payload.towns.length} at-risk town(s) across ${grouped.size} nation(s).`)],
+  });
 }
 
 /**
@@ -206,5 +211,10 @@ async function dispatchEnemyAlert(
   await channel.send({
     content: roleMention || undefined,
     embeds: [embed],
+  });
+
+  // Confirmation
+  await channel.send({
+    embeds: [successEmbed('✅ Alert Dispatched', `Detected ${payload.changes.length} change(s) for ${payload.nationName}.`)],
   });
 }

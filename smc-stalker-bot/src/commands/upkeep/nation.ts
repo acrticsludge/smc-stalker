@@ -12,6 +12,7 @@ import { defineCommand } from '../register.js';
 import { createNationRepository } from '../../repositories/nation.repository.js';
 import { createTownRepository } from '../../repositories/town.repository.js';
 import { infoEmbed, dangerEmbed } from '../../lib/embed-builder.js';
+import { formatDateLongGMT } from '../../lib/dates.js';
 
 export function registerUpkeepNationCommand(sql: Sql): void {
   const nationRepo = createNationRepository(sql);
@@ -67,7 +68,7 @@ export function registerUpkeepNationCommand(sql: Sql): void {
         `**Average Bank/Town:** $${(totalBank / towns.length).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
         `**Average Upkeep/Town:** $${(totalUpkeep / towns.length).toLocaleString(undefined, { minimumFractionDigits: 2 })}/day`,
         `**Towns at Risk (< 7 days):** ${atRiskCount}`,
-        `**Last Seen:** <t:${Math.floor(new Date(nation.last_seen_at).getTime() / 1000)}:R>`,
+        `**Last Seen:** ${formatDateLongGMT(nation.last_seen_at)}`,
       ];
 
       // List at-risk towns if a threshold was provided

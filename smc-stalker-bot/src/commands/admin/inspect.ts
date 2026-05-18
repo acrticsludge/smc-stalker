@@ -11,6 +11,7 @@ import { defineCommand } from '../register.js';
 import { createGuildService } from '../../services/guild.service.js';
 import { getAuth } from '../../services/auth.service.js';
 import { infoEmbed, dangerEmbed } from '../../lib/embed-builder.js';
+import { formatDateLongGMT } from '../../lib/dates.js';
 
 export function registerInspectCommand(sql: Sql): void {
   const guildService = createGuildService(sql);
@@ -49,7 +50,7 @@ export function registerInspectCommand(sql: Sql): void {
           `**Admins:** ${result.admins.length}`,
           `**Authorized Roles:** ${result.roles.length}`,
           `**Config Keys:** ${result.configs.length}`,
-          `**Created:** ${new Date(result.guild.created_at).toLocaleString()}`,
+          `**Created:** ${formatDateLongGMT(result.guild.created_at)}`,
         ].join('\n'),
       );
 
