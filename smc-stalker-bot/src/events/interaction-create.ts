@@ -2,14 +2,17 @@
  * Interaction create event handler.
  *
  * Handles:
- *  - Slash commands (auth check AFTER deferral to avoid 3s timeout)
+ *  - Slash commands (defer first, then auth check)
  *  - Button interactions (approve/deny access requests)
+ *
+ * Resilient to expired interactions — logs instead of crashing.
  */
 
 import {
   type Interaction,
   type ChatInputCommandInteraction,
   type ButtonInteraction,
+  DiscordAPIError,
 } from 'discord.js';
 import type { Sql } from 'postgres';
 import { createLogger } from '../lib/logger.js';
@@ -45,25 +48,36 @@ async function handleCommand(
   try {
     await executeCommand(interaction, sql);
   } catch (error) {
+    // If the interaction expired, just log it — don't try to reply
+    if (error instanceof DiscordAPIError && error.code === 10062) {
+      logger.warn(
+        { command: interaction.commandName, user: interaction.user.id },
+        'Interaction expired before response',
+      );
+      return;
+    }
+
     logger.error(
       { command: interaction.commandName, user: interaction.user.id, guild: interaction.guildId, error: String(error) },
       'Unhandled command error',
     );
-    const errorEmbed = dangerEmbed('Command Error', 'An unexpected error occurred.');
-    if (interaction.deferred || interaction.replied) {
-      await interaction.editReply({ embeds: [errorEmbed] });
-    } else {
-      await interaction.reply({ embeds: [errorEmbed], flags: 64 });
+
+    // Try to send error embed; if that also fails, just log
+    try {
+      const errorEmbed = dangerEmbed('Command Error', 'An unexpected error occurred.');
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply({ embeds: [errorEmbed] });
+      } else {
+        await interaction.reply({ embeds: [errorEmbed], flags: 64 });
+      }
+    } catch (replyError) {
+      logger.warn({ error: String(replyError) }, 'Failed to send error reply');
     }
   }
 }
 
 /**
- * Execute a command with auth check.
- *
- * CRITICAL: deferReply() is called FIRST, before the auth check.
- * Discord requires a response within 3 seconds. DB queries during
- * auth can exceed that. Deferring buys 15 minutes to respond.
+ * Execute a command: defer immediately, then auth check, then handler.
  */
 async function executeCommand(
   interaction: ChatInputCommandInteraction,
@@ -79,7 +93,7 @@ async function executeCommand(
     return;
   }
 
-  // Defer immediately to avoid 3-second window expiry
+  // Defer immediately to extend the interaction window
   await interaction.deferReply();
 
   // Auth check (DB queries can be slow)
@@ -95,7 +109,7 @@ async function executeCommand(
   await command.execute(interaction);
 }
 
-// ── Button handler (unchanged) ─────────────────────────
+// ── Button handler ──────────────────────────────────
 
 async function handleButton(
   interaction: ButtonInteraction,

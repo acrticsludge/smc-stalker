@@ -40,7 +40,7 @@ export async function startBot(config: BotConfig, sql: Sql): Promise<Client> {
   });
 
   // Register event handlers
-  client.on('ready', (readyClient) => {
+  client.on('clientReady', (readyClient) => {
     void handleReady(readyClient, sql);
   });
 
