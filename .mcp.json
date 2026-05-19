@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "llm-atlas": {
+      "command": "npx",
+      "args": [
+        "@llm-atlas/cli",
+        "mcp"
+      ]
+    }
+  }
+}

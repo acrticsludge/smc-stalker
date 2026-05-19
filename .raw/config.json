@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "tokenBudget": 800,
+  "stalenessDays": 7,
+  "modules": {
+    "include": [
+      "*"
+    ],
+    "exclude": []
+  },
+  "moduleOverrides": {}
+}

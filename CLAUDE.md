@@ -366,3 +366,7 @@ Run `opencode run -m deepseek/deepseek-v4-pro` to use Pro on a task. See `.openc
 
 - Run `/readme` to regenerate README.md after major changes.
 - The command reads `package.json` and `CLAUDE.md` to generate a current project overview.
+
+## LLMAtlas Knowledge Layer
+See `raw/` for module summaries. Read `raw/INDEX.md` first.
+Stale entries marked ⚠️ — verify against source before relying on them.

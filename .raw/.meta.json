@@ -1,0 +1,184 @@
+{
+  "version": 1,
+  "modules": {
+    "smc-stalker-website": {
+      "files": [
+        "smc-stalker-website/eslint.config.mjs",
+        "smc-stalker-website/next.config.ts",
+        "smc-stalker-website/postcss.config.mjs"
+      ],
+      "hash": "smc-stalker-website",
+      "fileHash": "fa31aafcaeda8e5c0103630324aaf2c33cbfdda159d1fa8b64d8e46fda17fea1",
+      "lastGen": "2026-05-19T14:24:00.658Z",
+      "lastCommit": "2026-05-19T14:24:00.665Z"
+    },
+    "smc-stalker-website/app": {
+      "files": [
+        "smc-stalker-website/app/layout.tsx",
+        "smc-stalker-website/app/page.tsx"
+      ],
+      "hash": "smc-stalker-website/app",
+      "fileHash": "c2ec89399b99337d9b393a5967523169f99c1120c3910ca29393e55f9d6b40fd",
+      "lastGen": "2026-05-19T14:24:48.011Z",
+      "lastCommit": "2026-05-19T14:24:48.014Z"
+    },
+    "smc-stalker-bot": {
+      "files": [
+        "smc-stalker-bot/eslint.config.js",
+        "smc-stalker-bot/vitest.config.ts"
+      ],
+      "hash": "smc-stalker-bot",
+      "fileHash": "4754e4c84d44ccb51f318d53eec73a6c3291d5c3d45c65e46f6ac53a03449707",
+      "lastGen": "2026-05-19T14:24:51.171Z",
+      "lastCommit": "2026-05-19T14:24:51.174Z"
+    },
+    "smc-stalker-bot/src": {
+      "files": [
+        "smc-stalker-bot/src/bot.ts",
+        "smc-stalker-bot/src/index.ts"
+      ],
+      "hash": "smc-stalker-bot/src",
+      "fileHash": "6338273099e972dd2d0b9cb31672875ada73f4573b14cd5afaa1e5a6a16ecb60",
+      "lastGen": "2026-05-19T14:24:54.524Z",
+      "lastCommit": "2026-05-19T14:24:54.527Z"
+    },
+    "smc-stalker-bot/src/types": {
+      "files": [
+        "smc-stalker-bot/src/types/alerts.ts",
+        "smc-stalker-bot/src/types/database.ts",
+        "smc-stalker-bot/src/types/discord.ts",
+        "smc-stalker-bot/src/types/dynmap.ts"
+      ],
+      "hash": "smc-stalker-bot/src/types",
+      "fileHash": "cbd127657086a1279a321dfe25f2368cc61812a28e58c5c1604df2425b951f14",
+      "lastGen": "2026-05-19T14:25:45.980Z",
+      "lastCommit": "2026-05-19T14:25:45.986Z"
+    },
+    "smc-stalker-bot/src/services": {
+      "files": [
+        "smc-stalker-bot/src/services/alert.service.ts",
+        "smc-stalker-bot/src/services/auth.service.ts",
+        "smc-stalker-bot/src/services/guild.service.ts",
+        "smc-stalker-bot/src/services/health.service.ts",
+        "smc-stalker-bot/src/services/poll.service.ts"
+      ],
+      "hash": "smc-stalker-bot/src/services",
+      "fileHash": "9b368f1704b540ef12e96d95baaa8a446c91e3bb8049a91f55c89e7086a01c4d",
+      "lastGen": "2026-05-19T14:25:49.024Z",
+      "lastCommit": "2026-05-19T14:25:49.026Z"
+    },
+    "smc-stalker-bot/src/repositories": {
+      "files": [
+        "smc-stalker-bot/src/repositories/access-request.repository.ts",
+        "smc-stalker-bot/src/repositories/alert-config.repository.ts",
+        "smc-stalker-bot/src/repositories/guild-config.repository.ts",
+        "smc-stalker-bot/src/repositories/guild-role.repository.ts",
+        "smc-stalker-bot/src/repositories/guild-user.repository.ts",
+        "smc-stalker-bot/src/repositories/guild.repository.ts",
+        "smc-stalker-bot/src/repositories/nation-resident-series.repository.ts",
+        "smc-stalker-bot/src/repositories/nation.repository.ts",
+        "smc-stalker-bot/src/repositories/poll-run.repository.ts",
+        "smc-stalker-bot/src/repositories/territory-shape.repository.ts",
+        "smc-stalker-bot/src/repositories/town-resident-series.repository.ts",
+        "smc-stalker-bot/src/repositories/town-snapshot.repository.ts",
+        "smc-stalker-bot/src/repositories/town.repository.ts"
+      ],
+      "hash": "smc-stalker-bot/src/repositories",
+      "fileHash": "57a9c0dc3c3b64fcf8dbab68ec738a557c060e937d37aedd092310074c747200",
+      "lastGen": "2026-05-19T14:26:58.685Z",
+      "lastCommit": "2026-05-19T14:26:58.691Z"
+    },
+    "smc-stalker-bot/src/lib": {
+      "files": [
+        "smc-stalker-bot/src/lib/dates.ts",
+        "smc-stalker-bot/src/lib/dynmap-client.ts",
+        "smc-stalker-bot/src/lib/dynmap-parser.ts",
+        "smc-stalker-bot/src/lib/embed-builder.ts",
+        "smc-stalker-bot/src/lib/format.ts",
+        "smc-stalker-bot/src/lib/logger.ts",
+        "smc-stalker-bot/src/lib/pagination.ts",
+        "smc-stalker-bot/src/lib/rate-limiter.ts",
+        "smc-stalker-bot/src/lib/retry.ts"
+      ],
+      "hash": "smc-stalker-bot/src/lib",
+      "fileHash": "d105e3c318021d3b2f201a4a4d85375dff490e7900685817dc11c06f2addf618",
+      "lastGen": "2026-05-19T14:27:01.700Z",
+      "lastCommit": "2026-05-19T14:27:01.701Z"
+    },
+    "smc-stalker-bot/src/events": {
+      "files": [
+        "smc-stalker-bot/src/events/interaction-create.ts",
+        "smc-stalker-bot/src/events/ready.ts"
+      ],
+      "hash": "smc-stalker-bot/src/events",
+      "fileHash": "2ab29e6c0fc168108d74cb1acc915bbf3902f756516390e6d5172f476faa7920",
+      "lastGen": "2026-05-19T14:27:54.308Z",
+      "lastCommit": "2026-05-19T14:27:54.316Z"
+    },
+    "smc-stalker-bot/src/config": {
+      "files": [
+        "smc-stalker-bot/src/config/constants.ts",
+        "smc-stalker-bot/src/config/env.ts"
+      ],
+      "hash": "smc-stalker-bot/src/config",
+      "fileHash": "471adc0be6832abf45c89195e48e7bfc1d0431dfab388880b41c24f4b8a2941b",
+      "lastGen": "2026-05-19T14:27:57.066Z",
+      "lastCommit": "2026-05-19T14:27:57.068Z"
+    },
+    "smc-stalker-bot/src/commands": {
+      "files": [
+        "smc-stalker-bot/src/commands/access.ts",
+        "smc-stalker-bot/src/commands/help.ts",
+        "smc-stalker-bot/src/commands/index.ts",
+        "smc-stalker-bot/src/commands/player.ts",
+        "smc-stalker-bot/src/commands/register.ts"
+      ],
+      "hash": "smc-stalker-bot/src/commands",
+      "fileHash": "c215ac3e9acd1fa1c19f19beb73bf409281268f7bbf409f9172daffbf8765f50",
+      "lastGen": "2026-05-19T14:28:00.072Z",
+      "lastCommit": "2026-05-19T14:28:00.075Z"
+    },
+    "smc-stalker-bot/src/commands/upkeep": {
+      "files": [
+        "smc-stalker-bot/src/commands/upkeep/at-risk.ts",
+        "smc-stalker-bot/src/commands/upkeep/list.ts",
+        "smc-stalker-bot/src/commands/upkeep/nation.ts",
+        "smc-stalker-bot/src/commands/upkeep/town.ts"
+      ],
+      "hash": "smc-stalker-bot/src/commands/upkeep",
+      "fileHash": "ff7a007a9d40efc523037af6e9e3581afdb5526ac5ce42b8c8025bdabeef346c",
+      "lastGen": "2026-05-19T14:28:30.178Z",
+      "lastCommit": "2026-05-19T14:28:30.180Z"
+    },
+    "smc-stalker-bot/src/commands/alerts": {
+      "files": [
+        "smc-stalker-bot/src/commands/alerts/configure.ts",
+        "smc-stalker-bot/src/commands/alerts/status.ts",
+        "smc-stalker-bot/src/commands/alerts/view.ts"
+      ],
+      "hash": "smc-stalker-bot/src/commands/alerts",
+      "fileHash": "7009a591b4dcaa81abccfe025673f34dea43218676a1ff38290a4fa62a0928fe",
+      "lastGen": "2026-05-19T14:29:29.162Z",
+      "lastCommit": "2026-05-19T14:29:29.167Z"
+    },
+    "smc-stalker-bot/src/commands/admin": {
+      "files": [
+        "smc-stalker-bot/src/commands/admin/guilds.ts",
+        "smc-stalker-bot/src/commands/admin/inspect.ts",
+        "smc-stalker-bot/src/commands/admin/manage-admin.ts",
+        "smc-stalker-bot/src/commands/admin/pending-requests.ts",
+        "smc-stalker-bot/src/commands/admin/toggle-auth.ts",
+        "smc-stalker-bot/src/commands/admin/whitelist.ts"
+      ],
+      "hash": "smc-stalker-bot/src/commands/admin",
+      "fileHash": "5a075592f1b60507de4f32f06fd5a1ee6d5b70d7a892d499441bbc65b5f0e320",
+      "lastGen": "2026-05-19T14:29:32.086Z",
+      "lastCommit": "2026-05-19T14:29:32.090Z"
+    }
+  },
+  "config": {
+    "tokenBudget": 800,
+    "stalenessDays": 7,
+    "hashUpdateThreshold": 14
+  }
+}
