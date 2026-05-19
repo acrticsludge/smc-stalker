@@ -18,8 +18,40 @@ export function createAlertConfigRepository(sql: Sql) {
 
     async findByGuild(guildId: string): Promise<AlertConfigRow[]> {
       return sql<AlertConfigRow[]>`
-        SELECT * FROM alert_configs WHERE guild_id = ${guildId} ORDER BY type ASC
+        SELECT * FROM alert_configs WHERE guild_id = ${guildId} ORDER BY created_at ASC
       `;
+    },
+
+    async findByGuildSorted(guildId: string): Promise<AlertConfigRow[]> {
+      return sql<AlertConfigRow[]>`
+        SELECT * FROM alert_configs WHERE guild_id = ${guildId} ORDER BY created_at ASC
+      `;
+    },
+
+    async deleteByPosition(guildId: string, position: number): Promise<AlertConfigRow | null> {
+      const rows = await sql<AlertConfigRow[]>`
+        SELECT * FROM alert_configs
+        WHERE guild_id = ${guildId}
+        ORDER BY created_at ASC
+        LIMIT 1 OFFSET ${position - 1}
+      `;
+      if (rows.length === 0) return null;
+      const config = rows[0]!;
+      await sql`DELETE FROM alert_configs WHERE id = ${config.id}`;
+      return config;
+    },
+
+    async countByGuild(): Promise<Record<string, number>> {
+      const rows = await sql<[{ guild_id: string; count: number }]>`
+        SELECT guild_id, COUNT(*)::int AS count
+        FROM alert_configs
+        GROUP BY guild_id
+      `;
+      const result: Record<string, number> = {};
+      for (const row of rows) {
+        result[row.guild_id] = row.count;
+      }
+      return result;
     },
 
     async findByType(guildId: string, type: AlertType): Promise<AlertConfigRow[]> {

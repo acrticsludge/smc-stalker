@@ -63,17 +63,29 @@ export function createAlertService(sql: Sql) {
         // Filter by specific nation
         atRiskTowns = await townRepo.findByNationName(config.nation_name);
       } else if (config.type === 'friendly') {
-        // Friendly: get friendly nations and find their towns
-        const friendlyNations = await configRepo.getTyped<string[]>(
-          config.guild_id,
-          'friendly_nations',
-        );
-        if (!friendlyNations || friendlyNations.length === 0) continue;
+        // Check if this config has per-scoped nations (nation_pings keys)
+        const scopedNations = Object.keys(config.nation_pings ?? {});
 
-        atRiskTowns = [];
-        for (const nationName of friendlyNations) {
-          const nationTowns = await townRepo.findByNationName(nationName);
-          atRiskTowns.push(...nationTowns);
+        if (scopedNations.length > 0) {
+          // Per-config scoping: only evaluate nations in this config's nation_pings
+          atRiskTowns = [];
+          for (const nationName of scopedNations) {
+            const nationTowns = await townRepo.findByNationName(nationName);
+            atRiskTowns.push(...nationTowns);
+          }
+        } else {
+          // Fall back to global friendly nations list (backward compatible)
+          const friendlyNations = await configRepo.getTyped<string[]>(
+            config.guild_id,
+            'friendly_nations',
+          );
+          if (!friendlyNations || friendlyNations.length === 0) continue;
+
+          atRiskTowns = [];
+          for (const nationName of friendlyNations) {
+            const nationTowns = await townRepo.findByNationName(nationName);
+            atRiskTowns.push(...nationTowns);
+          }
         }
       } else {
         // Upkeep: all towns

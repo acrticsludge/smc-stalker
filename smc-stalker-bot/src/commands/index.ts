@@ -9,6 +9,7 @@ import { registerAdminCommands } from './admin/manage-admin.js';
 import { registerInspectCommand } from './admin/inspect.js';
 import { registerToggleAuthCommand } from './admin/toggle-auth.js';
 import { registerPendingRequestsCommand } from './admin/pending-requests.js';
+import { registerGuildsCommand } from './admin/guilds.js';
 import { registerUpkeepTownCommand } from './upkeep/town.js';
 import { registerUpkeepNationCommand } from './upkeep/nation.js';
 import { registerListCommands } from './upkeep/list.js';
@@ -30,6 +31,7 @@ export function registerAllCommands(sql: Sql): void {
   registerInspectCommand(sql);
   registerToggleAuthCommand(sql);
   registerPendingRequestsCommand(sql);
+  registerGuildsCommand(sql);
 
   registerUpkeepTownCommand(sql);
   registerUpkeepNationCommand(sql);
