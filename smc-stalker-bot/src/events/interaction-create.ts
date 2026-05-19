@@ -115,22 +115,22 @@ async function handleButton(
   interaction: ButtonInteraction,
   sql: Sql,
 ): Promise<void> {
-  if (interaction.user.id !== SUPERADMIN_ID) {
-    await interaction.reply({
-      embeds: [dangerEmbed('Access Denied', 'Only the superadmin can review access requests.')],
-      flags: 64,
-    });
-    return;
-  }
-
   const customId = interaction.customId;
+
+  // Only handle access request buttons; let collectors handle everything else
   const approveMatch = /^approve_access_(.+)$/.exec(customId);
   const denyMatch = /^deny_access_(.+)$/.exec(customId);
   const requestId = approveMatch?.[1] ?? denyMatch?.[1];
 
   if (!requestId) {
+    // Not our button — let message component collectors handle it.
+    // Don't acknowledge, so collectors on the original message can process it.
+    return;
+  }
+
+  if (interaction.user.id !== SUPERADMIN_ID) {
     await interaction.reply({
-      embeds: [dangerEmbed('Error', 'Unknown button interaction.')],
+      embeds: [dangerEmbed('Access Denied', 'Only the superadmin can review access requests.')],
       flags: 64,
     });
     return;
